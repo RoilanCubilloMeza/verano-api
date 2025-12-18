@@ -24,11 +24,11 @@ npm install
 
 ### 2. Configurar variables de entorno
 
-Edita el archivo `.env`:
+Crea un archivo `.env` con las siguientes variables:
 
 ```env
-DATABASE_URL="mysql://root:password@localhost:3306/verano"
-JWT_SECRET="tu-secreto-super-seguro-cambiar-en-produccion"
+DATABASE_URL="mysql://usuario:contraseña@localhost:3306/nombre_base_datos"
+JWT_SECRET="genera-un-secreto-aleatorio-seguro-aqui"
 JWT_EXPIRES_IN="7d"
 RATE_LIMIT_MAX=100
 RATE_LIMIT_WINDOW_MS=60000
@@ -118,9 +118,9 @@ Para obtener un token, crea un usuario:
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
   -d '{
-    "userFirebaseUID": "firebase-uid-123",
-    "userEmail": "usuario@email.com",
-    "userName": "Juan Pérez",
+    "userFirebaseUID": "tu-firebase-uid",
+    "userEmail": "tu-email@example.com",
+    "userName": "Tu Nombre",
     "userAppVersion": "1"
   }'
 ```
@@ -224,9 +224,9 @@ const response = await fetch('/api/users', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    userFirebaseUID: 'firebase-123',
-    userEmail: 'usuario@email.com',
-    userName: 'Juan Pérez',
+    userFirebaseUID: 'tu-firebase-uid',
+    userEmail: 'tu-email@example.com',
+    userName: 'Tu Nombre',
     userAppVersion: '1'
   })
 })
