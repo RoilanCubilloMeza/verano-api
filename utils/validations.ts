@@ -55,6 +55,22 @@ export const createUserPreferenceSchema = z.object({
   preferenceUserId: z.number().int().positive('ID de usuario inválido'),
 })
 
+export const updateUserPreferenceSchema = z.object({
+  preferenceBrandID: z.number().int().positive('ID de marca inválido').optional(),
+  preferenceCategoryID: z.number().int().positive('ID de categoría inválido').optional(),
+  preferencePriceMax: z.number().int().positive('Precio máximo debe ser positivo').optional(),
+})
+
+// Esquemas para comparaciones
+export const createComparisonSchema = z.object({
+  vehicleIds: z.array(z.number().int().positive()).min(1, 'Debe incluir al menos un vehículo'),
+})
+
+// Esquemas para feedback
+export const createFeedbackSchema = z.object({
+  feedbackContent: z.string().min(1, 'Contenido requerido').max(4000, 'Contenido muy largo'),
+})
+
 // Esquemas de paginación
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -81,5 +97,8 @@ export type CreateOpinionInput = z.infer<typeof createOpinionSchema>
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>
 export type CreateCommunityMessageInput = z.infer<typeof createCommunityMessageSchema>
 export type CreateUserPreferenceInput = z.infer<typeof createUserPreferenceSchema>
+export type UpdateUserPreferenceInput = z.infer<typeof updateUserPreferenceSchema>
+export type CreateComparisonInput = z.infer<typeof createComparisonSchema>
+export type CreateFeedbackInput = z.infer<typeof createFeedbackSchema>
 export type SearchVehiclesInput = z.infer<typeof searchVehiclesSchema>
 export type PaginationInput = z.infer<typeof paginationSchema>
