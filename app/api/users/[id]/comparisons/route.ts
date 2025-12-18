@@ -3,14 +3,19 @@ import { prisma } from '@/utils/prisma'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
 import { withAuth } from '@/utils/middleware'
 
+interface RouteParams {
+  params: Promise<{ id: string }>
+}
+
 // GET /api/users/:id/comparisons - Obtener comparaciones del usuario
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
 
       if (isNaN(userId)) {
         throw new ApiError(400, 'ID de usuario inválido')
@@ -45,11 +50,12 @@ export async function GET(
 // POST /api/users/:id/comparisons - Crear nueva comparación
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
 
       if (isNaN(userId)) {
         throw new ApiError(400, 'ID de usuario inválido')
@@ -124,11 +130,12 @@ export async function POST(
 // DELETE /api/users/:id/comparisons - Eliminar comparación
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
       const { searchParams } = new URL(request.url)
       const comparationId = searchParams.get('comparationId')
 

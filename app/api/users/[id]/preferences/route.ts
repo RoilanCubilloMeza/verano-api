@@ -3,14 +3,19 @@ import { prisma } from '@/utils/prisma'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
 import { withAuth } from '@/utils/middleware'
 
+interface RouteParams {
+  params: Promise<{ id: string }>
+}
+
 // GET /api/users/:id/preferences - Obtener preferencias del usuario
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
 
       if (isNaN(userId)) {
         throw new ApiError(400, 'ID de usuario inválido')
@@ -39,11 +44,12 @@ export async function GET(
 // POST /api/users/:id/preferences - Crear nueva preferencia
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
 
       if (isNaN(userId)) {
         throw new ApiError(400, 'ID de usuario inválido')
@@ -106,11 +112,12 @@ export async function POST(
 // PATCH /api/users/:id/preferences - Actualizar preferencia
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
       const { searchParams } = new URL(request.url)
       const preferenceId = searchParams.get('preferenceId')
 
@@ -190,11 +197,12 @@ export async function PATCH(
 // DELETE /api/users/:id/preferences - Eliminar preferencia
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   return withAuth(request, async (_req, tokenUserId) => {
     try {
-      const userId = parseInt(params.id)
+      const { id } = await params
+      const userId = parseInt(id)
       const { searchParams } = new URL(request.url)
       const preferenceId = searchParams.get('preferenceId')
 
