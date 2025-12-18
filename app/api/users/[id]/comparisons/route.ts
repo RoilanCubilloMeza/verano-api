@@ -8,17 +8,17 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
       // Verificar que el usuario solo acceda a sus propias comparaciones
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para acceder a estas comparaciones', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para acceder a estas comparaciones')
       }
 
       const comparisons = await prisma.tblusercomparations.findMany({
@@ -47,23 +47,23 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para crear comparaciones', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para crear comparaciones')
       }
 
       const body = await request.json()
       const { vehicleIds } = body
 
       if (!Array.isArray(vehicleIds) || vehicleIds.length === 0) {
-        throw new ApiError('Debe proporcionar al menos un ID de vehículo', 400)
+        throw new ApiError(400, 'Debe proporcionar al menos un ID de vehículo')
       }
 
       // Verificar que los vehículos existen
@@ -73,7 +73,7 @@ export async function POST(
       })
 
       if (vehiclesExist.length !== vehicleIds.length) {
-        throw new ApiError('Uno o más vehículos no existen', 400)
+        throw new ApiError(400, 'Uno o más vehículos no existen')
       }
 
       // Crear la comparación
@@ -114,7 +114,7 @@ export async function POST(
         },
       })
 
-      return successResponse(updatedComparison, 'Comparación creada exitosamente', 201)
+      return successResponse(updatedComparison, 201)
     } catch (error) {
       return handleError(error)
     }
@@ -126,22 +126,22 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
       const { searchParams } = new URL(request.url)
       const comparationId = searchParams.get('comparationId')
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
       if (!comparationId) {
-        throw new ApiError('ID de comparación requerido', 400)
+        throw new ApiError(400, 'ID de comparación requerido')
       }
 
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para eliminar esta comparación', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para eliminar esta comparación')
       }
 
       // Verificar que la comparación pertenece al usuario
@@ -153,7 +153,7 @@ export async function DELETE(
       })
 
       if (!comparison) {
-        throw new ApiError('Comparación no encontrada', 404)
+        throw new ApiError(404, 'Comparación no encontrada')
       }
 
       // Desasociar vehículos primero
@@ -167,7 +167,7 @@ export async function DELETE(
         where: { comparationID: parseInt(comparationId) },
       })
 
-      return successResponse(null, 'Comparación eliminada exitosamente')
+      return successResponse({ message: 'Comparación eliminada exitosamente' })
     } catch (error) {
       return handleError(error)
     }

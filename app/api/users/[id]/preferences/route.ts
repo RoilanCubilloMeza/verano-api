@@ -8,17 +8,17 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
       // Verificar que el usuario solo acceda a sus propias preferencias
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para acceder a estas preferencias', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para acceder a estas preferencias')
       }
 
       const preferences = await prisma.tbluserpreferences.findMany({
@@ -41,16 +41,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para crear preferencias', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para crear preferencias')
       }
 
       const body = await request.json()
@@ -59,8 +59,8 @@ export async function POST(
       // Validar campos requeridos
       if (!preferenceBrandID || !preferenceCategoryID || !preferencePriceMax) {
         throw new ApiError(
-          'Campos requeridos: preferenceBrandID, preferenceCategoryID, preferencePriceMax',
-          400
+          400,
+          'Campos requeridos: preferenceBrandID, preferenceCategoryID, preferencePriceMax'
         )
       }
 
@@ -70,7 +70,7 @@ export async function POST(
       })
 
       if (!brandExists) {
-        throw new ApiError('Marca no encontrada', 404)
+        throw new ApiError(404, 'Marca no encontrada')
       }
 
       // Validar que la categoría existe
@@ -79,7 +79,7 @@ export async function POST(
       })
 
       if (!categoryExists) {
-        throw new ApiError('Categoría no encontrada', 404)
+        throw new ApiError(404, 'Categoría no encontrada')
       }
 
       // Crear preferencia
@@ -96,7 +96,7 @@ export async function POST(
         },
       })
 
-      return successResponse(preference, 'Preferencia creada exitosamente', 201)
+      return successResponse(preference, 201)
     } catch (error) {
       return handleError(error)
     }
@@ -108,22 +108,22 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
       const { searchParams } = new URL(request.url)
       const preferenceId = searchParams.get('preferenceId')
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
       if (!preferenceId) {
-        throw new ApiError('ID de preferencia requerido', 400)
+        throw new ApiError(400, 'ID de preferencia requerido')
       }
 
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para actualizar esta preferencia', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para actualizar esta preferencia')
       }
 
       // Verificar que la preferencia pertenece al usuario
@@ -135,20 +135,24 @@ export async function PATCH(
       })
 
       if (!existingPreference) {
-        throw new ApiError('Preferencia no encontrada', 404)
+        throw new ApiError(404, 'Preferencia no encontrada')
       }
 
       const body = await request.json()
       const { preferenceBrandID, preferenceCategoryID, preferencePriceMax } = body
 
-      const updateData: any = {}
+      const updateData: {
+        preferenceBrandID?: number
+        preferenceCategoryID?: number
+        preferencePriceMax?: number
+      } = {}
 
       if (preferenceBrandID !== undefined) {
         const brandExists = await prisma.tblvehiclebrand.findUnique({
           where: { brandID: parseInt(preferenceBrandID) },
         })
         if (!brandExists) {
-          throw new ApiError('Marca no encontrada', 404)
+          throw new ApiError(404, 'Marca no encontrada')
         }
         updateData.preferenceBrandID = parseInt(preferenceBrandID)
       }
@@ -158,7 +162,7 @@ export async function PATCH(
           where: { categoryID: parseInt(preferenceCategoryID) },
         })
         if (!categoryExists) {
-          throw new ApiError('Categoría no encontrada', 404)
+          throw new ApiError(404, 'Categoría no encontrada')
         }
         updateData.preferenceCategoryID = parseInt(preferenceCategoryID)
       }
@@ -176,7 +180,7 @@ export async function PATCH(
         },
       })
 
-      return successResponse(updatedPreference, 'Preferencia actualizada exitosamente')
+      return successResponse(updatedPreference)
     } catch (error) {
       return handleError(error)
     }
@@ -188,22 +192,22 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async (_req, tokenUserId) => {
     try {
       const userId = parseInt(params.id)
       const { searchParams } = new URL(request.url)
       const preferenceId = searchParams.get('preferenceId')
 
       if (isNaN(userId)) {
-        throw new ApiError('ID de usuario inválido', 400)
+        throw new ApiError(400, 'ID de usuario inválido')
       }
 
       if (!preferenceId) {
-        throw new ApiError('ID de preferencia requerido', 400)
+        throw new ApiError(400, 'ID de preferencia requerido')
       }
 
-      if (decodedToken.userId !== userId) {
-        throw new ApiError('No autorizado para eliminar esta preferencia', 403)
+      if (tokenUserId !== userId) {
+        throw new ApiError(403, 'No autorizado para eliminar esta preferencia')
       }
 
       // Verificar que la preferencia pertenece al usuario
@@ -215,14 +219,14 @@ export async function DELETE(
       })
 
       if (!preference) {
-        throw new ApiError('Preferencia no encontrada', 404)
+        throw new ApiError(404, 'Preferencia no encontrada')
       }
 
       await prisma.tbluserpreferences.delete({
         where: { preferenceID: parseInt(preferenceId) },
       })
 
-      return successResponse(null, 'Preferencia eliminada exitosamente')
+      return successResponse({ message: 'Preferencia eliminada exitosamente' })
     } catch (error) {
       return handleError(error)
     }

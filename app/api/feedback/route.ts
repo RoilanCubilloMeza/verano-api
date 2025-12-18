@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/utils/prisma'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
 import { withAuth, withOptionalAuth } from '@/utils/middleware'
-import { sanitizeContent } from '@/utils/sanitize'
+import { sanitizeText } from '@/utils/sanitize'
 
 // GET /api/feedback - Obtener todos los feedbacks (solo admin, o simplificar sin filtro)
 export async function GET(request: NextRequest) {
@@ -22,25 +22,25 @@ export async function GET(request: NextRequest) {
 
 // POST /api/feedback - Crear nuevo feedback
 export async function POST(request: NextRequest) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async () => {
     try {
       const body = await request.json()
       const { feedbackContent } = body
 
       if (!feedbackContent || typeof feedbackContent !== 'string') {
-        throw new ApiError('El contenido del feedback es requerido', 400)
+        throw new ApiError(400, 'El contenido del feedback es requerido')
       }
 
       if (feedbackContent.trim().length === 0) {
-        throw new ApiError('El contenido del feedback no puede estar vacío', 400)
+        throw new ApiError(400, 'El contenido del feedback no puede estar vacío')
       }
 
       if (feedbackContent.length > 4000) {
-        throw new ApiError('El contenido del feedback no puede exceder 4000 caracteres', 400)
+        throw new ApiError(400, 'El contenido del feedback no puede exceder 4000 caracteres')
       }
 
       // Sanitizar contenido para prevenir XSS
-      const sanitizedContent = sanitizeContent(feedbackContent)
+      const sanitizedContent = sanitizeText(feedbackContent)
 
       // Obtener el último ID para incrementar (ya que no es autoincrement)
       const lastFeedback = await prisma.tblusersfeedback.findMany({
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      return successResponse(feedback, 'Feedback creado exitosamente', 201)
+      return successResponse(feedback, 201)
     } catch (error) {
       return handleError(error)
     }
@@ -66,13 +66,13 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/feedback - Eliminar feedback (solo el que lo creó o admin)
 export async function DELETE(request: NextRequest) {
-  return withAuth(request, async (decodedToken) => {
+  return withAuth(request, async () => {
     try {
       const { searchParams } = new URL(request.url)
       const feedbackId = searchParams.get('feedbackId')
 
       if (!feedbackId) {
-        throw new ApiError('ID de feedback requerido', 400)
+        throw new ApiError(400, 'ID de feedback requerido')
       }
 
       const feedback = await prisma.tblusersfeedback.findUnique({
@@ -80,14 +80,14 @@ export async function DELETE(request: NextRequest) {
       })
 
       if (!feedback) {
-        throw new ApiError('Feedback no encontrado', 404)
+        throw new ApiError(404, 'Feedback no encontrado')
       }
 
       await prisma.tblusersfeedback.delete({
         where: { feedbackID: parseInt(feedbackId) },
       })
 
-      return successResponse(null, 'Feedback eliminado exitosamente')
+      return successResponse({ message: 'Feedback eliminado exitosamente' })
     } catch (error) {
       return handleError(error)
     }
