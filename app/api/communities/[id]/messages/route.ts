@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse, ApiError } from '@/lib/api-response'
-import { withAuth } from '@/lib/middleware'
-import { createCommunityMessageSchema, paginationSchema } from '@/lib/validations'
-import { sanitizeText } from '@/lib/sanitize'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse, ApiError } from '@/utils/api-response'
+import { withAuth } from '@/utils/middleware'
+import { createCommunityMessageSchema, paginationSchema } from '@/utils/validations'
+import { sanitizeText } from '@/utils/sanitize'
 
 interface RouteParams {
   params: Promise<{ id: string }>

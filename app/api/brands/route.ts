@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withOptionalAuth } from '@/lib/middleware'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withOptionalAuth } from '@/utils/middleware'
 
 // GET /api/brands - Obtener todas las marcas
 export async function GET(request: NextRequest) {

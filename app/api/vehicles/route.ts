@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withOptionalAuth } from '@/lib/middleware'
-import { searchVehiclesSchema } from '@/lib/validations'
-import type { PaginatedResponse } from '@/lib/types'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withOptionalAuth } from '@/utils/middleware'
+import { searchVehiclesSchema } from '@/utils/validations'
+import type { PaginatedResponse } from '@/utils/types'
 
 // GET /api/vehicles - Buscar vehículos con filtros y paginación
 export async function GET(request: NextRequest) {

@@ -59,9 +59,7 @@ npm run test-api
 
 ## 📚 Documentación
 
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Documentación completa de todos los endpoints
-- **[RESUMEN_API.md](RESUMEN_API.md)** - Resumen de implementación y características
-- **[lib/api-client-example.ts](lib/api-client-example.ts)** - Ejemplos de uso del cliente
+- **[utils/api-client-example.ts](utils/api-client-example.ts)** - Ejemplos de uso del cliente
 
 ## 🔑 Endpoints Principales
 
@@ -151,7 +149,7 @@ verano/
 │   │   └── stats/
 │   └── generated/        # Cliente Prisma generado
 │
-├── lib/                  # Utilidades compartidas
+├── utils/                # Utilidades compartidas
 │   ├── prisma.ts         # Cliente Prisma
 │   ├── auth.ts           # Autenticación
 │   ├── validations.ts    # Esquemas de validación
@@ -162,7 +160,8 @@ verano/
 │   └── schema.prisma     # Esquema de base de datos
 │
 ├── scripts/
-│   └── test-api.js       # Script de pruebas
+│   ├── test-api.js       # Script de pruebas
+│   └── seed-database.ts  # Seed de base de datos
 │
 └── middleware.ts         # Middleware global (headers seguridad)
 ```
@@ -272,7 +271,7 @@ const response = await fetch('/api/vehicles/123/opinions', {
 })
 ```
 
-Ver más ejemplos en [lib/api-client-example.ts](lib/api-client-example.ts)
+Ver más ejemplos en [utils/api-client-example.ts](utils/api-client-example.ts)
 
 ## 🧪 Testing
 

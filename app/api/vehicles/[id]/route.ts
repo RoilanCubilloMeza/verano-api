@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse, ApiError } from '@/lib/api-response'
-import { withOptionalAuth } from '@/lib/middleware'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse, ApiError } from '@/utils/api-response'
+import { withOptionalAuth } from '@/utils/middleware'
 
 interface RouteParams {
   params: Promise<{ id: string }>

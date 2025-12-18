@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withAuth } from '@/lib/middleware'
-import { createOpinionSchema } from '@/lib/validations'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withAuth } from '@/utils/middleware'
+import { createOpinionSchema } from '@/utils/validations'
 
 interface RouteParams {
   params: Promise<{ id: string }>

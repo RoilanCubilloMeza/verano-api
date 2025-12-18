@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withAuth, withOptionalAuth } from '@/lib/middleware'
-import { createUserSchema } from '@/lib/validations'
-import { generateToken } from '@/lib/auth'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withAuth, withOptionalAuth } from '@/utils/middleware'
+import { createUserSchema } from '@/utils/validations'
+import { generateToken } from '@/utils/auth'
 
 // GET /api/users - Obtener todos los usuarios (requiere auth)
 export async function GET(request: NextRequest) {

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withAuth } from '@/lib/middleware'
-import { createCommunitySchema } from '@/lib/validations'
-import { paginationSchema } from '@/lib/validations'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withAuth } from '@/utils/middleware'
+import { createCommunitySchema } from '@/utils/validations'
+import { paginationSchema } from '@/utils/validations'
 
 // GET /api/communities - Obtener todas las comunidades
 export async function GET(request: NextRequest) {

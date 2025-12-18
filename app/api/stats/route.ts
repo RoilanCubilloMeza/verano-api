@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { handleError, successResponse } from '@/lib/api-response'
-import { withAuth } from '@/lib/middleware'
+import { prisma } from '@/utils/prisma'
+import { handleError, successResponse } from '@/utils/api-response'
+import { withAuth } from '@/utils/middleware'
 
 // GET /api/stats - Obtener estadísticas generales
 export async function GET(request: NextRequest) {
