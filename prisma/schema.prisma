@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model tblcommunities {
+  communityID          Int                    @id @default(autoincrement())
+  communityName        String                 @db.VarChar(255)
+  communityLocationLat String?                @db.VarChar(20)
+  communityLocationLon String?                @db.VarChar(20)
+  tblcommunitymessages tblcommunitymessages[]
+  tblcommunityusers    tblcommunityusers[]
+}
+
+model tblcommunitymessages {
+  messageID          Int            @id @default(autoincrement())
+  messageContent     String         @db.VarChar(4000)
+  messageDate        DateTime       @db.Date
+  messageCommunityID Int
+  messageUserId      Int
+  tblcommunities     tblcommunities @relation(fields: [messageCommunityID], references: [communityID], onUpdate: Restrict, map: "RelCommunityMessages")
+  tblusuarios        tblusuarios    @relation(fields: [messageUserId], references: [userId], onUpdate: Restrict, map: "RelUserMessages")
+
+  @@index([messageCommunityID], map: "RelCommunityMessages")
+  @@index([messageUserId], map: "RelUserMessages")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tblcommunityusers {
+  commUserCommunityID Int
+  commUserUserId      Int
+  commUserAdmin       String         @db.VarChar(1)
+  tblcommunities      tblcommunities @relation(fields: [commUserCommunityID], references: [communityID], onUpdate: Restrict, map: "RelCommunityUsers")
+  tblusuarios         tblusuarios    @relation(fields: [commUserUserId], references: [userId], onUpdate: Restrict, map: "RelUsersCommunities")
+
+  @@id([commUserCommunityID, commUserUserId])
+  @@index([commUserUserId], map: "RelUsersCommunities")
+}
+
+model tblusercomparations {
+  comparationID Int           @id @default(autoincrement())
+  userId        Int?
+  tblusuarios   tblusuarios?  @relation(fields: [userId], references: [userId], onDelete: Restrict, onUpdate: Restrict, map: "RelUserComparations")
+  tblvehicles   tblvehicles[]
+
+  @@index([userId], map: "RelUserComparations")
+}
+
+model tbluserfavoritevehicles {
+  favoriteID  Int           @id @default(autoincrement())
+  userId      Int?
+  tblusuarios tblusuarios?  @relation(fields: [userId], references: [userId], onDelete: Restrict, onUpdate: Restrict, map: "RelUserFavorites")
+  tblvehicles tblvehicles[]
+
+  @@index([userId], map: "RelUserFavorites")
+}
+
+model tbluserpreferences {
+  preferenceID         Int                  @id @default(autoincrement())
+  preferenceBrandID    Int
+  preferenceCategoryID Int
+  preferencePriceMax   Int
+  preferenceUserId     Int
+  tblvehiclebrand      tblvehiclebrand      @relation(fields: [preferenceBrandID], references: [brandID], onUpdate: Restrict, map: "RelUserPrefBrand")
+  tblvehiclecategories tblvehiclecategories @relation(fields: [preferenceCategoryID], references: [categoryID], onUpdate: Restrict, map: "RelUserPrefCategory")
+  tblusuarios          tblusuarios          @relation(fields: [preferenceUserId], references: [userId], onUpdate: Restrict, map: "RelUserPreferences")
+
+  @@index([preferenceBrandID], map: "RelUserPrefBrand")
+  @@index([preferenceCategoryID], map: "RelUserPrefCategory")
+  @@index([preferenceUserId], map: "RelUserPreferences")
+}
+
+model tblusersfeedback {
+  feedbackID      Int    @id
+  feedbackContent String @db.VarChar(4000)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tblusuarios {
+  userId                  Int                       @id @default(autoincrement())
+  userFirebaseUID         String                    @unique(map: "userFirebaseUID") @db.VarChar(255)
+  userEmail               String                    @unique(map: "userEmail") @db.VarChar(255)
+  userName                String?                   @db.VarChar(255)
+  userPhotoURL            String?                   @db.VarChar(500)
+  userAppVersion          String                    @db.VarChar(1)
+  tblcommunitymessages    tblcommunitymessages[]
+  tblcommunityusers       tblcommunityusers[]
+  tblusercomparations     tblusercomparations[]
+  tbluserfavoritevehicles tbluserfavoritevehicles[]
+  tbluserpreferences      tbluserpreferences[]
+  tblvehiclesopinions     tblvehiclesopinions[]
+}
+
+model tblvehiclebrand {
+  brandID            Int                  @id @default(autoincrement())
+  brandBrand         String               @db.VarChar(255)
+  tbluserpreferences tbluserpreferences[]
+  tblvehicles        tblvehicles[]
+}
+
+model tblvehiclecategories {
+  categoryID          Int                  @id @default(autoincrement())
+  categoryDescription String               @db.VarChar(255)
+  tbluserpreferences  tbluserpreferences[]
+  tblvehicles         tblvehicles[]
+}
+
+model tblvehiclemodel {
+  modelID          Int           @id @default(autoincrement())
+  modelDescription String        @unique(map: "modelDescription") @db.VarChar(255)
+  tblvehicles      tblvehicles[]
+}
+
+model tblvehicles {
+  vehicleID               Int                      @id @default(autoincrement())
+  vehicleBrandID          Int
+  vehicleModelID          Int
+  vehicleVersionID        Int
+  vehicleCategoryID       Int
+  vehicleYear             Int
+  vehiclePDF              Bytes                    @db.Blob
+  vehiclePrice            Int
+  comparationID           Int?
+  favoriteID              Int?
+  tblusercomparations     tblusercomparations?     @relation(fields: [comparationID], references: [comparationID], onDelete: Restrict, onUpdate: Restrict, map: "RelComparationVehicles")
+  tbluserfavoritevehicles tbluserfavoritevehicles? @relation(fields: [favoriteID], references: [favoriteID], onDelete: Restrict, onUpdate: Restrict, map: "RelFavoriteVehicles")
+  tblvehiclecategories    tblvehiclecategories     @relation(fields: [vehicleCategoryID], references: [categoryID], onUpdate: Restrict, map: "RelVehicleCategory")
+  tblvehiclebrand         tblvehiclebrand          @relation(fields: [vehicleBrandID], references: [brandID], onUpdate: Restrict, map: "RelVehiclesBrands")
+  tblvehiclemodel         tblvehiclemodel          @relation(fields: [vehicleModelID], references: [modelID], onUpdate: Restrict, map: "RelVehiclesModels")
+  tblvehicleversion       tblvehicleversion        @relation(fields: [vehicleVersionID], references: [versionID], onUpdate: Restrict, map: "RelVehiclesVersions")
+  tblvehiclesopinions     tblvehiclesopinions[]
+
+  @@index([comparationID], map: "RelComparationVehicles")
+  @@index([favoriteID], map: "RelFavoriteVehicles")
+  @@index([vehicleCategoryID], map: "RelVehicleCategory")
+  @@index([vehicleBrandID], map: "RelVehiclesBrands")
+  @@index([vehicleModelID], map: "RelVehiclesModels")
+  @@index([vehicleVersionID], map: "RelVehiclesVersions")
+}
+
+model tblvehiclesopinions {
+  opinionID        Int         @id @default(autoincrement())
+  opinionRate      Int
+  opinionComment   String?     @db.VarChar(255)
+  opinionDate      DateTime    @db.Date
+  opinionVehicleID Int
+  opinionUserId    Int
+  tblusuarios      tblusuarios @relation(fields: [opinionUserId], references: [userId], onUpdate: Restrict, map: "RelUserOpinion")
+  tblvehicles      tblvehicles @relation(fields: [opinionVehicleID], references: [vehicleID], onUpdate: Restrict, map: "RelVehicleOpinions")
+
+  @@index([opinionUserId], map: "RelUserOpinion")
+  @@index([opinionVehicleID], map: "RelVehicleOpinions")
+}
+
+model tblvehicleversion {
+  versionID          Int           @id @default(autoincrement())
+  versionDescription String        @db.VarChar(255)
+  tblvehicles        tblvehicles[]
+}
