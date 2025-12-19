@@ -121,7 +121,9 @@ model tblvehicles {
   vehicleVersionID        Int
   vehicleCategoryID       Int
   vehicleYear             Int
-  vehiclePDF              Bytes                    @db.Blob
+  vehiclePDF              Bytes?                   @db.Blob
+  vehicleImageURL         String?                  @db.VarChar(500)
+  vehiclePDFURL           String?                  @db.VarChar(500)
   vehiclePrice            Int
   comparationID           Int?
   favoriteID              Int?

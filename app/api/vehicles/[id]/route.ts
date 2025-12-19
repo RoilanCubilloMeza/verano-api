@@ -62,6 +62,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
       return successResponse({
         ...vehicle,
+        imageUrl: vehicle.vehicleImageURL,
+        pdfUrl: vehicle.vehiclePDFURL,
         stats: {
           averageRating: Math.round(averageRating * 10) / 10,
           totalOpinions: opinions.length,

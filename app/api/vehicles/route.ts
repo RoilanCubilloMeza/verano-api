@@ -4,6 +4,7 @@ import { handleError, successResponse } from '@/utils/api-response'
 import { withOptionalAuth } from '@/utils/middleware'
 import { searchVehiclesSchema } from '@/utils/validations'
 import type { PaginatedResponse } from '@/utils/types'
+import { uploadImage } from '@/utils/cloudinary'
 
 // GET /api/vehicles - Buscar vehículos con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -108,6 +109,8 @@ export async function GET(request: NextRequest) {
           vehicleID: vehicle.vehicleID,
           vehicleYear: vehicle.vehicleYear,
           vehiclePrice: vehicle.vehiclePrice,
+          imageUrl: vehicle.vehicleImageURL,
+          pdfUrl: vehicle.vehiclePDFURL,
           brand: vehicle.tblvehiclebrand,
           model: vehicle.tblvehiclemodel,
           version: vehicle.tblvehicleversion,
@@ -128,6 +131,119 @@ export async function GET(request: NextRequest) {
       }
 
       return successResponse(response)
+    } catch (error) {
+      return handleError(error)
+    }
+  })
+}
+
+// POST /api/vehicles - Crear nuevo vehículo con foto y PDF
+export async function POST(request: NextRequest) {
+  return withOptionalAuth(request, async () => {
+    try {
+      const formData = await request.formData()
+      
+      // Extraer datos del formulario
+      const vehicleBrandID = parseInt(formData.get('vehicleBrandID') as string)
+      const vehicleModelID = parseInt(formData.get('vehicleModelID') as string)
+      const vehicleVersionID = parseInt(formData.get('vehicleVersionID') as string)
+      const vehicleCategoryID = parseInt(formData.get('vehicleCategoryID') as string)
+      const vehicleYear = parseInt(formData.get('vehicleYear') as string)
+      const vehiclePrice = parseInt(formData.get('vehiclePrice') as string)
+      const vehicleImage = formData.get('vehicleImage') as File | null
+      const vehiclePDFFile = formData.get('vehiclePDF') as File | null
+
+      // Validaciones
+      if (!vehicleBrandID || !vehicleModelID || !vehicleVersionID || !vehicleCategoryID) {
+        return handleError(new Error('Faltan campos requeridos: brandID, modelID, versionID, categoryID'))
+      }
+
+      if (!vehicleYear || vehicleYear < 1900 || vehicleYear > new Date().getFullYear() + 1) {
+        return handleError(new Error('Año de vehículo inválido'))
+      }
+
+      if (!vehiclePrice || vehiclePrice <= 0) {
+        return handleError(new Error('Precio inválido'))
+      }
+
+      // Subir imagen a Cloudinary (requerida)
+      let imageUrl: string
+      if (vehicleImage && vehicleImage.size > 0) {
+        // Validar tamaño máximo (5MB)
+        if (vehicleImage.size > 5 * 1024 * 1024) {
+          return handleError(new Error('La imagen no debe exceder 5MB'))
+        }
+
+        const uploadResult = await uploadImage(vehicleImage, 'vehicles/images')
+        imageUrl = uploadResult.url
+      } else {
+        return handleError(new Error('La imagen del vehículo es requerida'))
+      }
+
+      // Subir PDF a Cloudinary (opcional)
+      let pdfUrl: string | null = null
+      if (vehiclePDFFile && vehiclePDFFile.size > 0) {
+        // Validar tamaño máximo (10MB para PDF)
+        if (vehiclePDFFile.size > 10 * 1024 * 1024) {
+          return handleError(new Error('El PDF no debe exceder 10MB'))
+        }
+
+        // Validar tipo de archivo
+        if (vehiclePDFFile.type !== 'application/pdf') {
+          return handleError(new Error('El archivo debe ser un PDF'))
+        }
+
+        const uploadResult = await uploadImage(vehiclePDFFile, 'vehicles/pdfs')
+        pdfUrl = uploadResult.url
+      }
+
+      // Crear vehículo
+      const newVehicle = await prisma.tblvehicles.create({
+        data: {
+          vehicleBrandID,
+          vehicleModelID,
+          vehicleVersionID,
+          vehicleCategoryID,
+          vehicleYear,
+          vehiclePrice,
+          vehicleImageURL: imageUrl,
+          vehiclePDFURL: pdfUrl,
+        },
+        include: {
+          tblvehiclebrand: {
+            select: {
+              brandID: true,
+              brandBrand: true,
+            },
+          },
+          tblvehiclemodel: {
+            select: {
+              modelID: true,
+              modelDescription: true,
+            },
+          },
+          tblvehicleversion: {
+            select: {
+              versionID: true,
+              versionDescription: true,
+            },
+          },
+          tblvehiclecategories: {
+            select: {
+              categoryID: true,
+              categoryDescription: true,
+            },
+          },
+        },
+      })
+
+      return successResponse(
+        {
+          ...newVehicle,
+          message: 'Vehículo creado exitosamente',
+        },
+        201
+      )
     } catch (error) {
       return handleError(error)
     }
