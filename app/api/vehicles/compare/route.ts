@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             tblvehiclesopinions: true,
-            tbluserfavoritevehicles: true,
           },
         },
       },
@@ -98,7 +97,6 @@ export async function GET(request: NextRequest) {
         pdf: orderedVehicles[0]!.vehiclePDFURL,
         averageRating: vehicle1Opinions._avg.opinionRate || 0,
         totalOpinions: vehicle1Opinions._count,
-        totalFavorites: orderedVehicles[0]!._count.tbluserfavoritevehicles,
       },
       vehicle2: {
         id: orderedVehicles[1]!.vehicleID,
@@ -112,7 +110,6 @@ export async function GET(request: NextRequest) {
         pdf: orderedVehicles[1]!.vehiclePDFURL,
         averageRating: vehicle2Opinions._avg.opinionRate || 0,
         totalOpinions: vehicle2Opinions._count,
-        totalFavorites: orderedVehicles[1]!._count.tbluserfavoritevehicles,
       },
       differences: {
         priceDifference: Math.abs(orderedVehicles[0]!.vehiclePrice - orderedVehicles[1]!.vehiclePrice),

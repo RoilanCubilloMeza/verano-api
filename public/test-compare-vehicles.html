@@ -472,14 +472,6 @@
                             <span class="detail-label">Calificación:</span>
                             <span class="detail-value">⭐ ${vehicle1.averageRating.toFixed(1)} (${vehicle1.totalOpinions} opiniones)</span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Favoritos:</span>
-                            <span class="detail-value">❤️ ${vehicle1.totalFavorites}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Descripción:</span>
-                            <span class="detail-value">${vehicle1.description || 'N/A'}</span>
-                        </div>
                         ${vehicle1.pdf ? `<div class="detail-row"><span class="detail-label">Ficha Técnica:</span><span class="detail-value"><a href="${vehicle1.pdf}" target="_blank">📄 Ver PDF</a></span></div>` : ''}
                     </div>
 
@@ -502,14 +494,6 @@
                         <div class="detail-row">
                             <span class="detail-label">Calificación:</span>
                             <span class="detail-value">⭐ ${vehicle2.averageRating.toFixed(1)} (${vehicle2.totalOpinions} opiniones)</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Favoritos:</span>
-                            <span class="detail-value">❤️ ${vehicle2.totalFavorites}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Descripción:</span>
-                            <span class="detail-value">${vehicle2.description || 'N/A'}</span>
                         </div>
                         ${vehicle2.pdf ? `<div class="detail-row"><span class="detail-label">Ficha Técnica:</span><span class="detail-value"><a href="${vehicle2.pdf}" target="_blank">📄 Ver PDF</a></span></div>` : ''}
                     </div>
