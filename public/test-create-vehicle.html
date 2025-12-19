@@ -139,7 +139,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3000/api';
+        const API_BASE = 'http://localhost:3000/api/newcars';
         
         // Cargar datos iniciales
         async function loadInitialData() {
@@ -200,7 +200,7 @@
                 
                 showResult('loading', '⏳ Subiendo vehículo...');
                 
-                const response = await fetch(`${API_BASE}/vehicles`, {
+                const response = await fetch(API_BASE, {
                     method: 'POST',
                     body: formData
                 });

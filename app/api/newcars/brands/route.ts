@@ -1,0 +1,25 @@
+import { NextRequest } from 'next/server';
+import { prisma } from '@/utils/prisma';
+import { handleError, successResponse } from '@/utils/api-response';
+import { withOptionalAuth } from '@/utils/middleware';
+
+// GET /api/newcars/brands - Obtener todas las marcas
+export async function GET(request: NextRequest) {
+  return withOptionalAuth(request, async () => {
+    try {
+      const brands = await prisma.tblvehiclebrand.findMany({
+        select: {
+          brandID: true,
+          brandBrand: true,
+        },
+        orderBy: {
+          brandBrand: 'asc',
+        },
+      });
+
+      return successResponse(brands);
+    } catch (error) {
+      return handleError(error);
+    }
+  });
+}
