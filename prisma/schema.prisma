@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model tblcommunities {
@@ -86,6 +87,9 @@ model tblusuarios {
   userName                String?                   @db.VarChar(255)
   userPhotoURL            String?                   @db.VarChar(500)
   userAppVersion          String                    @db.VarChar(1)
+  mfaBackupCodes          String?                   @db.Text
+  mfaEnabled              Boolean                   @default(false)
+  mfaSecret               String?                   @db.VarChar(255)
   tblcommunitymessages    tblcommunitymessages[]
   tblcommunityusers       tblcommunityusers[]
   tblusercomparations     tblusercomparations[]
@@ -122,11 +126,11 @@ model tblvehicles {
   vehicleCategoryID       Int
   vehicleYear             Int
   vehiclePDF              Bytes?                   @db.Blob
-  vehicleImageURL         String?                  @db.VarChar(500)
-  vehiclePDFURL           String?                  @db.VarChar(500)
   vehiclePrice            Int
   comparationID           Int?
   favoriteID              Int?
+  vehicleImageURL         String?                  @db.VarChar(500)
+  vehiclePDFURL           String?                  @db.VarChar(500)
   tblusercomparations     tblusercomparations?     @relation(fields: [comparationID], references: [comparationID], onDelete: Restrict, onUpdate: Restrict, map: "RelComparationVehicles")
   tbluserfavoritevehicles tbluserfavoritevehicles? @relation(fields: [favoriteID], references: [favoriteID], onDelete: Restrict, onUpdate: Restrict, map: "RelFavoriteVehicles")
   tblvehiclecategories    tblvehiclecategories     @relation(fields: [vehicleCategoryID], references: [categoryID], onUpdate: Restrict, map: "RelVehicleCategory")
