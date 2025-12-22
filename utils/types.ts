@@ -66,9 +66,17 @@ export interface VehicleStats {
   }
 }
 
-export interface UserStats {
+ interface UserStats {
   totalOpinions: number
   totalFavorites: number
   totalComparisons: number
   communitiesJoined: number
+}
+
+export interface GoogleUserInfo {
+  sub: string
+  email: string
+  email_verified: boolean
+  name?: string
+  picture?: string
 }
