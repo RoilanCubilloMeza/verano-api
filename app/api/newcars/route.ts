@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/utils/prisma';
 import { handleError, successResponse } from '@/utils/api-response';
 import { withOptionalAuth } from '@/utils/middleware';
-import { uploadImage } from '@/utils/cloudinary';
+import { uploadImage, uploadPDF } from '@/utils/cloudinary';
 
 // GET /api/newcars - Obtener todos los datos necesarios para crear un vehículo
 export async function GET(request: NextRequest) {
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
           return handleError(new Error('El archivo debe ser un PDF'));
         }
 
-        const uploadResult = await uploadImage(vehiclePDFFile, 'vehicles/pdfs');
+        const uploadResult = await uploadPDF(vehiclePDFFile, 'vehicles/pdfs');
         pdfUrl = uploadResult.url;
       }
 

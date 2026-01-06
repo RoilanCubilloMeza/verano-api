@@ -4,7 +4,7 @@ import { handleError, successResponse } from '@/utils/api-response'
 import { withOptionalAuth } from '@/utils/middleware'
 import { searchVehiclesSchema } from '@/utils/validations'
 import type { PaginatedResponse } from '@/utils/types'
-import { uploadImage } from '@/utils/cloudinary'
+import { uploadImage, uploadPDF } from '@/utils/cloudinary'
 
 // GET /api/vehicles - Buscar vehículos con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
           return handleError(new Error('El archivo debe ser un PDF'))
         }
 
-        const uploadResult = await uploadImage(vehiclePDFFile, 'vehicles/pdfs')
+        const uploadResult = await uploadPDF(vehiclePDFFile, 'vehicles/pdfs')
         pdfUrl = uploadResult.url
       }
 
