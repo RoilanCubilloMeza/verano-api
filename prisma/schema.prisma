@@ -131,6 +131,31 @@ model tblvehicles {
   favoriteID              Int?
   vehicleImageURL         String?                  @db.VarChar(500)
   vehiclePDFURL           String?                  @db.VarChar(500)
+  
+  // Motor y rendimiento
+  vehiclePowerHP          Int?                     // Potencia en caballos de fuerza
+  vehicleDisplacementCC   Int?                     // Cilindrada en centímetros cúbicos
+  vehicleMaxSpeedKMH      Int?                     // Velocidad máxima en km/h
+  vehicleFuelConsumption  Decimal?                 @db.Decimal(4, 2) // Consumo en L/100km
+  vehicleFuelType         String?                  @db.VarChar(50) // Gasolina, Diesel, Eléctrico, Híbrido
+  
+  // Dimensiones y capacidad
+  vehicleWeightKG         Int?                     // Peso en kilogramos
+  vehiclePassengers       Int?                     // Número de pasajeros
+  vehicleGroundClearance  Int?                     // Distancia al suelo en mm
+  vehicleFuelTankCapacity Int?                     // Capacidad tanque en litros
+  
+  // Seguridad y transmisión
+  vehicleSafetyRating     Int?                     // Puntuación de seguridad (1-5 estrellas)
+  vehicleDriveType        String?                  @db.VarChar(50) // Delantera, Trasera, AWD, 4x4
+  vehicleTransmission     String?                  @db.VarChar(50) // Manual, Automática, CVT
+  vehicleSuspension       String?                  @db.VarChar(100) // Tipo de suspensión
+  
+  // Metadata de especificaciones
+  vehicleSpecsExtracted   Boolean                  @default(false) // Si las specs fueron extraídas de PDF
+  vehicleSpecsUpdatedAt   DateTime?                @updatedAt // Última actualización de specs
+  
+  // Relaciones
   tblusercomparations     tblusercomparations?     @relation(fields: [comparationID], references: [comparationID], onDelete: Restrict, onUpdate: Restrict, map: "RelComparationVehicles")
   tbluserfavoritevehicles tbluserfavoritevehicles? @relation(fields: [favoriteID], references: [favoriteID], onDelete: Restrict, onUpdate: Restrict, map: "RelFavoriteVehicles")
   tblvehiclecategories    tblvehiclecategories     @relation(fields: [vehicleCategoryID], references: [categoryID], onUpdate: Restrict, map: "RelVehicleCategory")
@@ -145,6 +170,11 @@ model tblvehicles {
   @@index([vehicleBrandID], map: "RelVehiclesBrands")
   @@index([vehicleModelID], map: "RelVehiclesModels")
   @@index([vehicleVersionID], map: "RelVehiclesVersions")
+  @@index([vehiclePrice])
+  @@index([vehiclePowerHP])
+  @@index([vehicleFuelConsumption])
+  @@index([vehicleSafetyRating])
+  @@index([vehiclePassengers])
 }
 
 model tblvehiclesopinions {

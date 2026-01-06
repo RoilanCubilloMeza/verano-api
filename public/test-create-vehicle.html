@@ -121,6 +121,107 @@
                 <label for="price">Precio:</label>
                 <input type="number" id="price" name="vehiclePrice" value="450000" min="1" required>
             </div>
+
+            <h3 style="margin-top: 30px; color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px;">🔧 Motor y Rendimiento</h3>
+            
+            <div class="form-group">
+                <label for="powerHP">Potencia (HP):</label>
+                <input type="number" id="powerHP" name="vehiclePowerHP" placeholder="Ej: 150" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="displacementCC">Cilindrada (CC):</label>
+                <input type="number" id="displacementCC" name="vehicleDisplacementCC" placeholder="Ej: 2000" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="maxSpeedKMH">Velocidad Máxima (km/h):</label>
+                <input type="number" id="maxSpeedKMH" name="vehicleMaxSpeedKMH" placeholder="Ej: 180" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="fuelConsumption">Consumo (L/100km):</label>
+                <input type="number" id="fuelConsumption" name="vehicleFuelConsumption" step="0.01" placeholder="Ej: 7.5" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="fuelType">Tipo de Combustible:</label>
+                <select id="fuelType" name="vehicleFuelType">
+                    <option value="">Seleccionar...</option>
+                    <option value="Gasolina">Gasolina</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Eléctrico">Eléctrico</option>
+                    <option value="Híbrido">Híbrido</option>
+                    <option value="Híbrido Enchufable">Híbrido Enchufable</option>
+                    <option value="Gas Natural">Gas Natural</option>
+                </select>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px;">📏 Dimensiones y Capacidad</h3>
+            
+            <div class="form-group">
+                <label for="weightKG">Peso (kg):</label>
+                <input type="number" id="weightKG" name="vehicleWeightKG" placeholder="Ej: 1500" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="passengers">Número de Pasajeros:</label>
+                <input type="number" id="passengers" name="vehiclePassengers" placeholder="Ej: 5" min="1" max="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="groundClearance">Distancia al Suelo (mm):</label>
+                <input type="number" id="groundClearance" name="vehicleGroundClearance" placeholder="Ej: 200" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="fuelTankCapacity">Capacidad del Tanque (L):</label>
+                <input type="number" id="fuelTankCapacity" name="vehicleFuelTankCapacity" placeholder="Ej: 60" min="0">
+            </div>
+
+            <h3 style="margin-top: 30px; color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px;">🛡️ Seguridad y Transmisión</h3>
+            
+            <div class="form-group">
+                <label for="safetyRating">Calificación de Seguridad (1-5 estrellas):</label>
+                <select id="safetyRating" name="vehicleSafetyRating">
+                    <option value="">Seleccionar...</option>
+                    <option value="1">⭐ 1 Estrella</option>
+                    <option value="2">⭐⭐ 2 Estrellas</option>
+                    <option value="3">⭐⭐⭐ 3 Estrellas</option>
+                    <option value="4">⭐⭐⭐⭐ 4 Estrellas</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 Estrellas</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="driveType">Tipo de Tracción:</label>
+                <select id="driveType" name="vehicleDriveType">
+                    <option value="">Seleccionar...</option>
+                    <option value="Delantera">Delantera (FWD)</option>
+                    <option value="Trasera">Trasera (RWD)</option>
+                    <option value="AWD">Tracción Total (AWD)</option>
+                    <option value="4x4">Doble Tracción (4x4)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="transmission">Transmisión:</label>
+                <select id="transmission" name="vehicleTransmission">
+                    <option value="">Seleccionar...</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Automática">Automática</option>
+                    <option value="CVT">CVT</option>
+                    <option value="Doble Embrague">Doble Embrague (DCT)</option>
+                    <option value="Secuencial">Secuencial</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="suspension">Suspensión:</label>
+                <input type="text" id="suspension" name="vehicleSuspension" placeholder="Ej: Independiente delantera y trasera" maxlength="100">
+            </div>
+
+            <h3 style="margin-top: 30px; color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px;">📸 Archivos</h3>
             
             <div class="form-group">
                 <label for="image">Imagen del vehículo (requerida):</label>

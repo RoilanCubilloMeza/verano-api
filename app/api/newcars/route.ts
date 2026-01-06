@@ -76,6 +76,25 @@ export async function POST(request: NextRequest) {
       const vehicleImage = formData.get('vehicleImage') as File | null;
       const vehiclePDFFile = formData.get('vehiclePDF') as File | null;
 
+      // Extraer especificaciones técnicas (Motor y Rendimiento)
+      const vehiclePowerHP = formData.get('vehiclePowerHP') ? parseInt(formData.get('vehiclePowerHP') as string) : null;
+      const vehicleDisplacementCC = formData.get('vehicleDisplacementCC') ? parseInt(formData.get('vehicleDisplacementCC') as string) : null;
+      const vehicleMaxSpeedKMH = formData.get('vehicleMaxSpeedKMH') ? parseInt(formData.get('vehicleMaxSpeedKMH') as string) : null;
+      const vehicleFuelConsumption = formData.get('vehicleFuelConsumption') ? parseFloat(formData.get('vehicleFuelConsumption') as string) : null;
+      const vehicleFuelType = (formData.get('vehicleFuelType') as string) || null;
+
+      // Dimensiones y Capacidad
+      const vehicleWeightKG = formData.get('vehicleWeightKG') ? parseInt(formData.get('vehicleWeightKG') as string) : null;
+      const vehiclePassengers = formData.get('vehiclePassengers') ? parseInt(formData.get('vehiclePassengers') as string) : null;
+      const vehicleGroundClearance = formData.get('vehicleGroundClearance') ? parseInt(formData.get('vehicleGroundClearance') as string) : null;
+      const vehicleFuelTankCapacity = formData.get('vehicleFuelTankCapacity') ? parseInt(formData.get('vehicleFuelTankCapacity') as string) : null;
+
+      // Seguridad y Transmisión
+      const vehicleSafetyRating = formData.get('vehicleSafetyRating') ? parseInt(formData.get('vehicleSafetyRating') as string) : null;
+      const vehicleDriveType = (formData.get('vehicleDriveType') as string) || null;
+      const vehicleTransmission = (formData.get('vehicleTransmission') as string) || null;
+      const vehicleSuspension = (formData.get('vehicleSuspension') as string) || null;
+
       // Validaciones
       if (!vehicleBrandID || !vehicleModelID || !vehicleVersionID || !vehicleCategoryID) {
         return handleError(new Error('Faltan campos requeridos: brandID, modelID, versionID, categoryID'));
@@ -120,7 +139,7 @@ export async function POST(request: NextRequest) {
         pdfUrl = uploadResult.url;
       }
 
-      // Crear vehículo
+      // Crear vehículo con especificaciones técnicas
       const newVehicle = await prisma.tblvehicles.create({
         data: {
           vehicleBrandID,
@@ -131,6 +150,20 @@ export async function POST(request: NextRequest) {
           vehiclePrice,
           vehicleImageURL: imageUrl,
           vehiclePDFURL: pdfUrl,
+          // Especificaciones técnicas
+          vehiclePowerHP,
+          vehicleDisplacementCC,
+          vehicleMaxSpeedKMH,
+          vehicleFuelConsumption,
+          vehicleFuelType,
+          vehicleWeightKG,
+          vehiclePassengers,
+          vehicleGroundClearance,
+          vehicleFuelTankCapacity,
+          vehicleSafetyRating,
+          vehicleDriveType,
+          vehicleTransmission,
+          vehicleSuspension,
         },
         include: {
           tblvehiclebrand: {
