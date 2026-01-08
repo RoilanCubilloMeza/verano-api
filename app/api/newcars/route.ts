@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   return withOptionalAuth(request, async () => {
     try {
       // Obtener todos los datos en paralelo
-      const [brands, models, versions, categories] = await Promise.all([
+      const [brands, models, versions, categories, vehicles] = await Promise.all([
         prisma.tblvehiclebrand.findMany({
           select: {
             brandID: true,
@@ -46,6 +46,38 @@ export async function GET(request: NextRequest) {
             categoryDescription: 'asc',
           },
         }),
+        prisma.tblvehicles.findMany({
+          orderBy: {
+            vehicleID: 'desc',
+          },
+          take: 50, // Últimos 50 vehículos
+          include: {
+            tblvehiclebrand: {
+              select: {
+                brandID: true,
+                brandBrand: true,
+              },
+            },
+            tblvehiclemodel: {
+              select: {
+                modelID: true,
+                modelDescription: true,
+              },
+            },
+            tblvehicleversion: {
+              select: {
+                versionID: true,
+                versionDescription: true,
+              },
+            },
+            tblvehiclecategories: {
+              select: {
+                categoryID: true,
+                categoryDescription: true,
+              },
+            },
+          },
+        }),
       ]);
 
       return successResponse({
@@ -53,6 +85,7 @@ export async function GET(request: NextRequest) {
         models,
         versions,
         categories,
+        vehicles,
       });
     } catch (error) {
       return handleError(error);
