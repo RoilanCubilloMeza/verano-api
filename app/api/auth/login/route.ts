@@ -13,7 +13,6 @@ function addLog(message: string) {
   const timestamp = new Date().toLocaleTimeString()
   const logMessage = `[${timestamp}] ${message}`
   sessionLogs.push(logMessage)
-  console.log(logMessage)
 }
 
 // Schema de validación para login
