@@ -66,7 +66,7 @@ export interface VehicleStats {
   }
 }
 
- interface UserStats {
+export interface UserStats {
   totalOpinions: number
   totalFavorites: number
   totalComparisons: number
@@ -79,4 +79,20 @@ export interface GoogleUserInfo {
   email_verified: boolean
   name?: string
   picture?: string
+}
+
+export interface VehicleSearchResult {
+  vehicleID: bigint
+  vehicleYear: number
+  vehiclePrice: number
+  imagen: string | null
+  brandID: number
+  marca: string
+  modelID: number
+  modelo: string
+  versionID: number
+  version: string
+  categoryID: number
+  categoria: string
+  textoCompleto: string
 }

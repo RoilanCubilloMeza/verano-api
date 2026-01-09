@@ -45,28 +45,90 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   })
 }
 
-// GET /api/users/[id]/favorites - Obtener favoritos del usuario
+// GET /api/users/[id]/favorites - Obtener favoritos del usuario con paginación
 export async function GET(request: NextRequest, { params }: RouteParams) {
   return withAuth(request, async () => {
     try {
       const { id } = await params
       const userIdNum = parseInt(id)
+      
+      // Obtener parámetros de paginación
+      const { searchParams } = new URL(request.url)
+      const page = parseInt(searchParams.get('page') || '1')
+      const limit = 5 // Límite fijo de 5 elementos por página
+      const skip = (page - 1) * limit
 
+      // Buscar el registro de favoritos del usuario
       const favorite = await prisma.tbluserfavoritevehicles.findFirst({
         where: { userId: userIdNum },
-        include: {
-          tblvehicles: {
-            include: {
-              tblvehiclebrand: true,
-              tblvehiclemodel: true,
-              tblvehicleversion: true,
-              tblvehiclecategories: true,
-            },
-          },
-        },
       })
 
-      return successResponse(favorite?.tblvehicles || [])
+      if (!favorite) {
+        return successResponse({
+          data: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        })
+      }
+
+      // Obtener vehículos favoritos con paginación
+      const [vehicles, total] = await Promise.all([
+        prisma.tblvehicles.findMany({
+          where: { favoriteID: favorite.favoriteID },
+          skip,
+          take: limit,
+          select: {
+            vehicleID: true,
+            vehicleImageURL: true,
+            vehicleYear: true,
+            tblvehiclemodel: {
+              select: {
+                modelDescription: true,
+              },
+            },
+            tblvehicleversion: {
+              select: {
+                versionDescription: true,
+              },
+            },
+            tblvehiclecategories: {
+              select: {
+                categoryDescription: true,
+              },
+            },
+          },
+          orderBy: {
+            vehicleID: 'desc',
+          },
+        }),
+        prisma.tblvehicles.count({
+          where: { favoriteID: favorite.favoriteID },
+        }),
+      ])
+
+      // Formatear respuesta
+      const formattedVehicles = vehicles.map(vehicle => ({
+        vehicleID: vehicle.vehicleID,
+        imagen: vehicle.vehicleImageURL,
+        modelo: vehicle.tblvehiclemodel.modelDescription,
+        version: vehicle.tblvehicleversion.versionDescription,
+        año: vehicle.vehicleYear,
+        categoria: vehicle.tblvehiclecategories.categoryDescription,
+      }))
+
+      return successResponse({
+        data: formattedVehicles,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      })
     } catch (error) {
       return handleError(error)
     }
