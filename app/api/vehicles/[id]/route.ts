@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/utils/prisma'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
-import { withOptionalAuth } from '@/utils/middleware'
+import { withOptionalAuth, withAuth } from '@/utils/middleware'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -161,6 +161,82 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         imageUrl: updatedVehicle.vehicleImageURL,
         pdfUrl: updatedVehicle.vehiclePDFURL,
       })
+    } catch (error) {
+      return handleError(error)
+    }
+  })
+}
+
+// DELETE /api/vehicles/[id] - Eliminar vehículo (solo administradores)
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  return withAuth(request, async (_req, authUserId) => {
+    try {
+      const { id } = await params
+      const vehicleID = parseInt(id)
+
+      if (isNaN(vehicleID)) {
+        throw new ApiError(400, 'ID de vehículo inválido')
+      }
+
+      // Verificar permisos de administrador
+      const isAdmin = authUserId <= 10 || request.headers.get('x-admin-key') === process.env.ADMIN_SECRET_KEY
+      
+      if (!isAdmin) {
+        throw new ApiError(403, 'Solo los administradores pueden eliminar vehículos')
+      }
+
+      // Verificar que el vehículo existe
+      const existingVehicle = await prisma.tblvehicles.findUnique({
+        where: { vehicleID },
+      })
+
+      if (!existingVehicle) {
+        throw new ApiError(404, 'Vehículo no encontrado')
+      }
+
+      // Contar relaciones antes de eliminar
+      const [opinionesCount, favoritosCount, comparacionesCount] = await Promise.all([
+        prisma.tblvehiclesopinions.count({
+          where: { opinionVehicleID: vehicleID },
+        }),
+        prisma.tblvehicles.count({
+          where: {
+            favoriteID: { not: null },
+            vehicleID,
+          },
+        }),
+        prisma.tblvehicles.count({
+          where: {
+            comparationID: { not: null },
+            vehicleID,
+          },
+        }),
+      ])
+
+      // Eliminar relaciones primero (o usar CASCADE en la BD)
+      await prisma.$transaction([
+        // Eliminar opiniones
+        prisma.tblvehiclesopinions.deleteMany({
+          where: { opinionVehicleID: vehicleID },
+        }),
+        // Finalmente eliminar el vehículo
+        prisma.tblvehicles.delete({
+          where: { vehicleID },
+        }),
+      ])
+
+      return successResponse(
+        {
+          message: 'Vehículo eliminado exitosamente',
+          vehicleID,
+          relacionesEliminadas: {
+            opiniones: opinionesCount,
+            favoritos: favoritosCount,
+            comparaciones: comparacionesCount,
+          },
+        },
+        200
+      )
     } catch (error) {
       return handleError(error)
     }

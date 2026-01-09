@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/utils/prisma'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
 import { withAuth } from '@/utils/middleware'
-import { updateUserSchema } from '@/utils/validations'
+import { uploadImage } from '@/utils/cloudinary'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -66,15 +66,43 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         throw new ApiError(403, 'No tienes permiso para actualizar este usuario')
       }
 
-      const body = await request.json()
-      const validated = updateUserSchema.parse(body)
+      // Obtener datos del formulario
+      const formData = await request.formData()
+      const updateData: Record<string, string> = {}
 
+      // Procesar campos de texto
+      const name = formData.get('userName')
+      if (name) updateData.userName = name.toString()
+
+      // Procesar foto de perfil si se envió
+      const photoFile = formData.get('photo') as File | null
+      if (photoFile && photoFile.size > 0) {
+        try {
+          // Subir imagen a Cloudinary
+          const { url } = await uploadImage(photoFile, 'users/profiles')
+          updateData.userPhotoURL = url
+        } catch {
+          throw new ApiError(400, 'Error al subir la foto de perfil')
+        }
+      }
+
+      // Si no hay datos para actualizar
+      if (Object.keys(updateData).length === 0) {
+        throw new ApiError(400, 'No se proporcionaron datos para actualizar')
+      }
+
+      // Actualizar usuario
       const user = await prisma.tblusuarios.update({
         where: { userId },
-        data: validated,
+        data: updateData,
       })
 
-      return successResponse(user)
+      return successResponse({
+        userId: user.userId,
+        email: user.userEmail,
+        name: user.userName,
+        photoURL: user.userPhotoURL,
+      })
     } catch (error) {
       return handleError(error)
     }

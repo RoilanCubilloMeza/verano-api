@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { GoogleUserInfo, verifyGoogleToken } from '@/utils/google-auth'
 import { prisma } from '@/utils/prisma'
 import { generateToken } from '@/utils/auth'

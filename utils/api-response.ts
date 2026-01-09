@@ -12,7 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-export function handleError(error: unknown) {
+export function handleError(error: unknown, logs: string[] = []) {
   console.error('API Error:', error)
 
   // Errores de validación Zod
@@ -24,6 +24,7 @@ export function handleError(error: unknown) {
           field: e.path.join('.'),
           message: e.message,
         })),
+        logs,
       },
       { status: 400 }
     )
@@ -35,6 +36,7 @@ export function handleError(error: unknown) {
       {
         error: error.message,
         code: error.code,
+        logs,
       },
       { status: error.statusCode }
     )
@@ -46,14 +48,14 @@ export function handleError(error: unknown) {
     
     if (prismaError.code === 'P2002') {
       return NextResponse.json(
-        { error: 'Ya existe un registro con estos datos únicos' },
+        { error: 'Ya existe un registro con estos datos únicos', logs },
         { status: 409 }
       )
     }
     
     if (prismaError.code === 'P2025') {
       return NextResponse.json(
-        { error: 'Registro no encontrado' },
+        { error: 'Registro no encontrado', logs },
         { status: 404 }
       )
     }
@@ -67,6 +69,7 @@ export function handleError(error: unknown) {
         : error instanceof Error 
           ? error.message 
           : 'Error desconocido',
+      logs,
     },
     { status: 500 }
   )
