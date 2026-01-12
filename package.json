@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "test-api": "node scripts/test-api.js",
     "seed": "tsx scripts/seed-database.ts",
     "prisma:generate": "prisma generate",
