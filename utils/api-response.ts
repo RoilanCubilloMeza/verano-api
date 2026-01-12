@@ -61,15 +61,23 @@ export function handleError(error: unknown, logs: string[] = []) {
     }
   }
 
-  // Error genérico
+  // Error genérico - agregar logs del error para debugging en Vercel
+  const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+  const errorStack = error instanceof Error ? error.stack : undefined
+  
+  // Log detallado en servidor (visible en Vercel logs)
+  console.error('Unhandled error:', {
+    message: errorMessage,
+    stack: errorStack,
+    error: error,
+  })
+  
   return NextResponse.json(
     {
       error: process.env.NODE_ENV === 'production' 
         ? 'Error interno del servidor' 
-        : error instanceof Error 
-          ? error.message 
-          : 'Error desconocido',
-      logs,
+        : errorMessage,
+      logs: [...logs, `Error: ${errorMessage}`],
     },
     { status: 500 }
   )
