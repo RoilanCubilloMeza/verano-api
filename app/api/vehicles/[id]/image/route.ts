@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       where: { vehicleID },
       select: {
         vehicleID: true,
-        vehiclePDF: true,
+        vehicleImageURL: true,
       },
     });
 
@@ -28,12 +28,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       throw new ApiError(404, 'Vehículo no encontrado');
     }
 
-    if (!vehicle.vehiclePDF || vehicle.vehiclePDF.length === 0) {
+    if (!vehicle.vehicleImageURL) {
       throw new ApiError(404, 'Imagen no disponible para este vehículo');
     }
 
-    // Extraer URL de Cloudinary del buffer
-    const imageUrl = vehicle.vehiclePDF.toString('utf-8');
+    // URL de Cloudinary
+    const imageUrl = vehicle.vehicleImageURL;
 
     // Redirigir a Cloudinary
     return NextResponse.redirect(imageUrl, 302);
