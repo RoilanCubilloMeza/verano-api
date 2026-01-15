@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Crear Vehículo Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #e7f3ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Test - Crear Vehículo con Auto-creación</h1>
+        
+        <div class="info">
+            <strong>✨ Nueva funcionalidad:</strong> Ahora puedes crear marcas, modelos, versiones y categorías automáticamente.
+            Solo escribe el nombre y si no existe, se creará automáticamente.
+        </div>
+
+        <form id="testForm">
+            <div class="form-group">
+                <label>Marca (nombre nuevo o existente):</label>
+                <input type="text" id="brandName" name="brandName" placeholder="Ej: Toyota" required>
+            </div>
+
+            <div class="form-group">
+                <label>Modelo (nombre nuevo o existente):</label>
+                <input type="text" id="modelName" name="modelName" placeholder="Ej: Hilux" required>
+            </div>
+
+            <div class="form-group">
+                <label>Versión (nombre nueva o existente):</label>
+                <input type="text" id="versionName" name="versionName" placeholder="Ej: 4x4 Diesel" required>
+            </div>
+
+            <div class="form-group">
+                <label>Categoría (nombre nueva o existente):</label>
+                <input type="text" id="categoryName" name="categoryName" placeholder="Ej: Pickup" required>
+            </div>
+
+            <div class="form-group">
+                <label>Año:</label>
+                <input type="number" id="vehicleYear" name="vehicleYear" min="2000" max="2026" value="2024" required>
+            </div>
+
+            <div class="form-group">
+                <label>Precio (USD):</label>
+                <input type="number" id="vehiclePrice" name="vehiclePrice" min="1" value="35000" required>
+            </div>
+
+            <div class="form-group">
+                <label>Imagen del vehículo:</label>
+                <input type="file" id="vehicleImage" name="vehicleImage" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label>PDF (opcional):</label>
+                <input type="file" id="vehiclePDF" name="vehiclePDF" accept="application/pdf">
+            </div>
+
+            <h3>Especificaciones Opcionales</h3>
+
+            <div class="form-group">
+                <label>Potencia (HP):</label>
+                <input type="number" id="vehiclePowerHP" name="vehiclePowerHP" placeholder="Ej: 200">
+            </div>
+
+            <div class="form-group">
+                <label>Cilindrada (CC):</label>
+                <input type="number" id="vehicleDisplacementCC" name="vehicleDisplacementCC" placeholder="Ej: 2800">
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de combustible:</label>
+                <select id="vehicleFuelType" name="vehicleFuelType">
+                    <option value="">Seleccionar...</option>
+                    <option value="Gasolina">Gasolina</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Eléctrico">Eléctrico</option>
+                    <option value="Híbrido">Híbrido</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Transmisión:</label>
+                <select id="vehicleTransmission" name="vehicleTransmission">
+                    <option value="">Seleccionar...</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Automática">Automática</option>
+                    <option value="CVT">CVT</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tracción:</label>
+                <select id="vehicleDriveType" name="vehicleDriveType">
+                    <option value="">Seleccionar...</option>
+                    <option value="Delantera">Delantera</option>
+                    <option value="Trasera">Trasera</option>
+                    <option value="AWD">AWD</option>
+                    <option value="4x4">4x4</option>
+                </select>
+            </div>
+
+            <button type="submit">Crear Vehículo</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const result = document.getElementById('result');
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creando...';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/newcars`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ Vehículo creado exitosamente!</h3>
+                        <p><strong>ID:</strong> ${data.data.vehicleID}</p>
+                        <p><strong>Marca:</strong> ${data.data.tblvehiclebrand.brandBrand} (ID: ${data.data.vehicleBrandID})</p>
+                        <p><strong>Modelo:</strong> ${data.data.tblvehiclemodel.modelDescription} (ID: ${data.data.vehicleModelID})</p>
+                        <p><strong>Versión:</strong> ${data.data.tblvehicleversion.versionDescription} (ID: ${data.data.vehicleVersionID})</p>
+                        <p><strong>Categoría:</strong> ${data.data.tblvehiclecategories.categoryDescription} (ID: ${data.data.vehicleCategoryID})</p>
+                        <p><strong>Año:</strong> ${data.data.vehicleYear}</p>
+                        <p><strong>Precio:</strong> $${data.data.vehiclePrice.toLocaleString()}</p>
+                        <p><strong>Imagen:</strong> <a href="${data.data.vehicleImageURL}" target="_blank">Ver imagen</a></p>
+                        ${data.data.vehiclePDFURL ? `<p><strong>PDF:</strong> <a href="${data.data.vehiclePDFURL}" target="_blank">Ver PDF</a></p>` : ''}
+                        <hr>
+                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Error al crear vehículo</h3>
+                        <p>${data.error || 'Error desconocido'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+                result.style.display = 'block';
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Error de conexión</h3>
+                    <p>${error.message}</p>
+                `;
+                result.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Crear Vehículo';
+            }
+        });
+    </script>
+</body>
+</html>

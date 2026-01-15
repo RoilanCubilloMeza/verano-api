@@ -161,13 +161,10 @@ export async function POST(request: NextRequest) {
           return handleError(new Error(`La marca con ID ${vehicleBrandID} no existe`));
         }
       } else if (brandName) {
-        // Buscar marca por nombre (case-insensitive)
+        // Buscar marca por nombre (MySQL es case-insensitive por defecto)
         let brand = await prisma.tblvehiclebrand.findFirst({
           where: {
-            brandBrand: {
-              equals: brandName.trim(),
-              mode: 'insensitive'
-            }
+            brandBrand: brandName.trim()
           }
         });
         
@@ -195,10 +192,7 @@ export async function POST(request: NextRequest) {
       } else if (modelName) {
         let model = await prisma.tblvehiclemodel.findFirst({
           where: {
-            modelDescription: {
-              equals: modelName.trim(),
-              mode: 'insensitive'
-            }
+            modelDescription: modelName.trim()
           }
         });
         
@@ -225,10 +219,7 @@ export async function POST(request: NextRequest) {
       } else if (versionName) {
         let version = await prisma.tblvehicleversion.findFirst({
           where: {
-            versionDescription: {
-              equals: versionName.trim(),
-              mode: 'insensitive'
-            }
+            versionDescription: versionName.trim()
           }
         });
         
@@ -255,10 +246,7 @@ export async function POST(request: NextRequest) {
       } else if (categoryName) {
         let category = await prisma.tblvehiclecategories.findFirst({
           where: {
-            categoryDescription: {
-              equals: categoryName.trim(),
-              mode: 'insensitive'
-            }
+            categoryDescription: categoryName.trim()
           }
         });
         
