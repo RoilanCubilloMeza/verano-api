@@ -436,27 +436,40 @@
             const modelSelect = document.getElementById('vehicleModelID');
             const versionSelect = document.getElementById('vehicleVersionID');
             
-            modelSelect.innerHTML = '<option value="">Seleccione un modelo</option>';
+            modelSelect.innerHTML = '<option value="">Cargando modelos...</option>';
             versionSelect.innerHTML = '<option value="">Seleccione primero un modelo</option>';
             modelSelect.disabled = true;
             versionSelect.disabled = true;
 
-            if (!brandID) return;
+            if (!brandID) {
+                modelSelect.innerHTML = '<option value="">Seleccione un modelo</option>';
+                return;
+            }
 
             try {
+                console.log('Cargando modelos para marca:', brandID);
                 const res = await fetch(`${API_BASE}/newcars/models?brandID=${brandID}`);
                 const data = await res.json();
                 
-                data.data.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model.modelID;
-                    option.textContent = model.modelDescription;
-                    modelSelect.appendChild(option);
-                });
+                console.log('Respuesta modelos:', data);
                 
-                modelSelect.disabled = false;
+                modelSelect.innerHTML = '<option value="">Seleccione un modelo</option>';
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.modelID;
+                        option.textContent = model.modelDescription;
+                        modelSelect.appendChild(option);
+                    });
+                    modelSelect.disabled = false;
+                } else {
+                    modelSelect.innerHTML = '<option value="">No hay modelos disponibles</option>';
+                    console.warn('No se encontraron modelos para la marca:', brandID);
+                }
             } catch (error) {
                 console.error('Error cargando modelos:', error);
+                modelSelect.innerHTML = '<option value="">Error al cargar modelos</option>';
             }
         });
 
@@ -465,25 +478,38 @@
             const modelID = this.value;
             const versionSelect = document.getElementById('vehicleVersionID');
             
-            versionSelect.innerHTML = '<option value="">Seleccione una versión</option>';
+            versionSelect.innerHTML = '<option value="">Cargando versiones...</option>';
             versionSelect.disabled = true;
 
-            if (!modelID) return;
+            if (!modelID) {
+                versionSelect.innerHTML = '<option value="">Seleccione una versión</option>';
+                return;
+            }
 
             try {
+                console.log('Cargando versiones para modelo:', modelID);
                 const res = await fetch(`${API_BASE}/newcars/versions?modelID=${modelID}`);
                 const data = await res.json();
                 
-                data.data.forEach(version => {
-                    const option = document.createElement('option');
-                    option.value = version.versionID;
-                    option.textContent = version.versionDescription;
-                    versionSelect.appendChild(option);
-                });
+                console.log('Respuesta versiones:', data);
                 
-                versionSelect.disabled = false;
+                versionSelect.innerHTML = '<option value="">Seleccione una versión</option>';
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(version => {
+                        const option = document.createElement('option');
+                        option.value = version.versionID;
+                        option.textContent = version.versionDescription;
+                        versionSelect.appendChild(option);
+                    });
+                    versionSelect.disabled = false;
+                } else {
+                    versionSelect.innerHTML = '<option value="">No hay versiones disponibles</option>';
+                    console.warn('No se encontraron versiones para el modelo:', modelID);
+                }
             } catch (error) {
                 console.error('Error cargando versiones:', error);
+                versionSelect.innerHTML = '<option value="">Error al cargar versiones</option>';
             }
         });
 
