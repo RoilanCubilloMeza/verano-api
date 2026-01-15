@@ -16,13 +16,29 @@ export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api')) {
     response.headers.set('Access-Control-Allow-Credentials', 'true')
     
-    // En desarrollo permitir todos los orígenes
-    if (process.env.NODE_ENV === 'development') {
-      response.headers.set('Access-Control-Allow-Origin', '*')
+    // Obtener el origen de la petición
+    const origin = request.headers.get('origin')
+    
+    // Orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'https://verano-api.vercel.app',
+      'https://verano-api-git-main-roilancubillomezas-projects.vercel.app',
+      process.env.ALLOWED_ORIGIN,
+    ].filter(Boolean)
+    
+    // Si el origen está en la lista permitida, permitirlo
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin)
+    } else if (process.env.NODE_ENV === 'development') {
+      // En desarrollo permitir todos
+      response.headers.set('Access-Control-Allow-Origin', origin || '*')
     } else {
-      // En producción, especificar dominio permitido
-      const allowedOrigin = process.env.ALLOWED_ORIGIN || 'https://tu-dominio.com'
-      response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
+      // En producción sin origen específico, permitir todos (para HTML estáticos)
+      response.headers.set('Access-Control-Allow-Origin', '*')
     }
     
     response.headers.set(
