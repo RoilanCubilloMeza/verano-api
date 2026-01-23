@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
       
       const {
         page,
-          limit = 50,
         brandID,
         categoryID,
         yearMin,
@@ -25,6 +24,7 @@ export async function GET(request: NextRequest) {
         sortBy,
         sortOrder,
       } = searchVehiclesSchema.parse(queryParams)
+      const limit = 40;
 
       // Construir filtros dinámicamente
       const where: Record<string, unknown> = {}
