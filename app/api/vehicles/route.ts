@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       
       const {
         page,
-        limit,
+          limit = 50,
         brandID,
         categoryID,
         yearMin,
