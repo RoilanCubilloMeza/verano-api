@@ -1,103 +1,124 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/utils/prisma'
 import { handleError, successResponse } from '@/utils/api-response'
-import { withOptionalAuth } from '@/utils/middleware'
-import type { VehicleSearchResult } from '@/utils/types'
+import { Prisma } from '@prisma/client'
 
 // GET /api/vehicles/search - Búsqueda de vehículos con autocompletado mejorado
 export async function GET(request: NextRequest) {
-  return withOptionalAuth(request, async () => {
-    try {
-      const { searchParams } = new URL(request.url)
-      const query = searchParams.get('q') || ''
-      const limit = parseInt(searchParams.get('limit') || '10') // Límite por defecto 10 para autocompletado
+  try {
+    const { searchParams } = new URL(request.url)
+    const query = searchParams.get('q') || ''
+    const limitParam = parseInt(searchParams.get('limit') || '10')
+    const limit = Math.min(limitParam, 50) // Máximo 50 resultados
 
-      if (!query || query.trim().length < 2) {
-        return successResponse({
-          data: [],
-          total: 0,
-          message: 'Ingresa al menos 2 caracteres para buscar',
-        })
-      }
-
-      const searchTerm = `%${query.trim()}%`
-
-      // Búsqueda optimizada usando SQL raw para mejor rendimiento
-      const vehicles: VehicleSearchResult[] = await prisma.$queryRaw`
-        SELECT 
-          v.vehicleID,
-          v.vehicleYear,
-          v.vehiclePrice,
-          v.vehicleImageURL as imagen,
-          b.brandID,
-          b.brandBrand as marca,
-          m.modelID,
-          m.modelDescription as modelo,
-          vv.versionID,
-          vv.versionDescription as version,
-          c.categoryID,
-          c.categoryDescription as categoria,
-          CONCAT(
-            b.brandBrand, ' ',
-            m.modelDescription, ' ',
-            vv.versionDescription, ' ',
-            CAST(v.vehicleYear AS CHAR)
-          ) as textoCompleto
-        FROM tblvehicles v
-        JOIN tblvehiclebrand b ON v.vehicleBrandID = b.brandID
-        JOIN tblvehiclemodel m ON v.vehicleModelID = m.modelID
-        JOIN tblvehicleversion vv ON v.vehicleVersionID = vv.versionID
-        JOIN tblvehiclecategories c ON v.vehicleCategoryID = c.categoryID
-        WHERE 
-          CONCAT(
-            b.brandBrand, ' ',
-            m.modelDescription, ' ',
-            vv.versionDescription, ' ',
-            CAST(v.vehicleYear AS CHAR)
-          ) LIKE ${searchTerm}
-          OR b.brandBrand LIKE ${searchTerm}
-          OR m.modelDescription LIKE ${searchTerm}
-          OR vv.versionDescription LIKE ${searchTerm}
-          OR CAST(v.vehicleYear AS CHAR) LIKE ${searchTerm}
-        ORDER BY 
-          v.vehicleYear DESC,
-          b.brandBrand ASC,
-          m.modelDescription ASC
-        LIMIT ${limit}
-      `
-
-      // Formatear resultados para autocompletado
-      const formattedResults = vehicles.map(v => ({
-        vehicleID: Number(v.vehicleID),
-        texto: String(v.textoCompleto), // Texto completo para mostrar en el autocompletado
-        marca: {
-          id: Number(v.brandID),
-          nombre: String(v.marca),
-        },
-        modelo: {
-          id: Number(v.modelID),
-          nombre: String(v.modelo),
-        },
-        version: {
-          id: Number(v.versionID),
-          nombre: String(v.version),
-        },
-        categoria: {
-          id: Number(v.categoryID),
-          nombre: String(v.categoria),
-        },
-        año: Number(v.vehicleYear),
-        precio: Number(v.vehiclePrice),
-        imagen: v.imagen ? String(v.imagen) : null,
-      }))
-
+    if (!query || query.trim().length < 2) {
       return successResponse({
-        data: formattedResults,
-        total: formattedResults.length,
-        query: query.trim(),
+        data: [],
+        total: 0,
+        message: 'Ingresa al menos 2 caracteres para buscar',
       })
-    } catch (error) {
-      return handleError(error)
     }
-  })
+
+    const searchTerm = query.trim()
+    const searchPattern = `%${searchTerm}%`
+    const yearSearch = parseInt(query.trim())
+
+    // Construir query base
+    let sqlQuery = Prisma.sql`
+      SELECT 
+        v.vehicleID,
+        v.vehicleBrandID,
+        v.vehicleModelID,
+        v.vehicleVersionID,
+        v.vehicleCategoryID,
+        v.vehicleYear,
+        v.vehiclePrice,
+        v.vehicleImageURL,
+        b.brandID,
+        b.brandBrand,
+        m.modelID,
+        m.modelDescription,
+        ver.versionID,
+        ver.versionDescription,
+        c.categoryID,
+        c.categoryDescription
+      FROM tblvehicles v
+      LEFT JOIN tblvehiclebrand b ON v.vehicleBrandID = b.brandID
+      LEFT JOIN tblvehiclemodel m ON v.vehicleModelID = m.modelID
+      LEFT JOIN tblvehicleversion ver ON v.vehicleVersionID = ver.versionID
+      LEFT JOIN tblvehiclecategories c ON v.vehicleCategoryID = c.categoryID
+      WHERE (
+        LOWER(b.brandBrand) LIKE LOWER(${searchPattern})
+        OR LOWER(m.modelDescription) LIKE LOWER(${searchPattern})
+        OR LOWER(ver.versionDescription) LIKE LOWER(${searchPattern})
+    `
+
+    // Agregar búsqueda por año si es válido
+    if (!isNaN(yearSearch) && yearSearch > 1900 && yearSearch < 2100) {
+      sqlQuery = Prisma.sql`${sqlQuery} OR v.vehicleYear = ${yearSearch}`
+    }
+
+    // Completar query con ORDER BY y LIMIT
+    sqlQuery = Prisma.sql`${sqlQuery}
+      )
+      ORDER BY v.vehicleYear DESC, b.brandBrand ASC, m.modelDescription ASC
+      LIMIT ${limit}
+    `
+
+    // Ejecutar query
+    const vehicles = await prisma.$queryRaw<
+      Array<{
+        vehicleID: number
+        vehicleBrandID: number
+        vehicleModelID: number
+        vehicleVersionID: number
+        vehicleCategoryID: number
+        vehicleYear: number
+        vehiclePrice: number | null
+        vehicleImageURL: string | null
+        brandID: number
+        brandBrand: string
+        modelID: number
+        modelDescription: string
+        versionID: number
+        versionDescription: string
+        categoryID: number
+        categoryDescription: string
+      }>
+    >(sqlQuery)
+
+    // Formatear resultados para autocompletado
+    const formattedResults = vehicles.map(v => ({
+      vehicleID: v.vehicleID,
+      texto: `${v.brandBrand} ${v.modelDescription} ${v.versionDescription} ${v.vehicleYear}`,
+      marca: {
+        id: v.brandID,
+        nombre: v.brandBrand,
+      },
+      modelo: {
+        id: v.modelID,
+        nombre: v.modelDescription,
+      },
+      version: {
+        id: v.versionID,
+        nombre: v.versionDescription,
+      },
+      categoria: {
+        id: v.categoryID,
+        nombre: v.categoryDescription,
+      },
+      año: v.vehicleYear,
+      precio: v.vehiclePrice,
+      imagen: v.vehicleImageURL || null,
+    }))
+
+    return successResponse({
+      data: formattedResults,
+      total: formattedResults.length,
+      query: searchTerm,
+    })
+  } catch (error) {
+    console.error('Error en búsqueda:', error)
+    return handleError(error)
+  }
 }

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Búsqueda de Vehículos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .results {
+            margin-top: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .result-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+        
+        .result-content {
+            flex: 1;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-texto {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .result-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #007bff;
+        }
+        
+        .autocomplete-container {
+            position: relative;
+        }
+        
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .autocomplete-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .autocomplete-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        .autocomplete-text {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .autocomplete-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Búsqueda de Vehículos</h1>
+        
+        <div class="input-group autocomplete-container">
+            <label>Buscar:</label>
+            <input type="text" id="searchQuery" placeholder="ej: Honda, PCX, 2024" autocomplete="off">
+            <div id="autocompleteResults" class="autocomplete-results" style="display: none;"></div>
+        </div>
+        
+        <div class="input-group" id="selectedVehicleContainer" style="display: none;">
+            <label>Vehículo Seleccionado:</label>
+            <div style="padding: 10px; background: #e6ffe6; border-radius: 5px; border: 1px solid #28a745;">
+                <strong>ID:</strong> <span id="selectedVehicleID"></span><br>
+                <strong>Nombre:</strong> <span id="selectedVehicleName"></span>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>Límite (máximo 50):</label>
+            <input type="number" id="searchLimit" value="5" min="1" max="50">
+        </div>
+        
+        <button onclick="buscar()">Buscar</button>
+        
+        <div id="message"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let autocompleteTimeout = null;
+        let vehiculoSeleccionado = null;
+
+        function mostrarMensaje(texto, tipo = 'info') {
+            const div = document.getElementById('message');
+            div.innerHTML = `<div class="${tipo}">${texto}</div>`;
+        }
+
+        function ocultarAutocomplete() {
+            document.getElementById('autocompleteResults').style.display = 'none';
+        }
+
+        function mostrarAutocomplete(resultados) {
+            const div = document.getElementById('autocompleteResults');
+            
+            console.log('mostrarAutocomplete llamado con:', resultados);
+            
+            if (!resultados || resultados.length === 0) {
+                console.log('No hay resultados para mostrar');
+                div.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            resultados.forEach(v => {
+                console.log('Procesando vehículo:', v);
+                const imagenUrl = v.imagen || 'https://via.placeholder.com/60x60?text=Sin+Imagen';
+                // Guardar datos completos en atributo data
+                html += `
+                    <div class="autocomplete-item" onclick='seleccionarVehiculo(${JSON.stringify(v)})'>
+                        <img src="${imagenUrl}" alt="${v.texto}" onerror="this.src='https://via.placeholder.com/60x60?text=Sin+Imagen'">
+                        <div>
+                            <div class="autocomplete-text">${v.texto}</div>
+                            <div class="autocomplete-details">
+                                $${v.precio || 'N/A'} | ${v.categoria?.nombre || 'Sin categoría'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            console.log('HTML generado:', html);
+            div.innerHTML = html;
+            div.style.display = 'block';
+            console.log('Autocomplete mostrado');
+        }
+
+        function seleccionarVehiculo(vehiculo) {
+            document.getElementById('searchQuery').value = vehiculo.texto;
+            ocultarAutocomplete();
+            
+            // Guardar vehículo seleccionado
+            vehiculoSeleccionado = vehiculo;
+            
+            // Mostrar el ID del vehículo seleccionado
+            document.getElementById('selectedVehicleID').textContent = vehiculo.vehicleID;
+            document.getElementById('selectedVehicleName').textContent = vehiculo.texto;
+            document.getElementById('selectedVehicleContainer').style.display = 'block';
+            
+            // Mostrar resultados directamente
+            const resultsDiv = document.getElementById('results');
+            mostrarMensaje(`✅ Vehículo seleccionado`, 'success');
+            
+            const imagenUrl = vehiculo.imagen || 'https://via.placeholder.com/100x100?text=Sin+Imagen';
+            
+            let html = '<div class="results">';
+            html += `
+                <div class="result-item">
+                    <img src="${imagenUrl}" alt="${vehiculo.texto}" onerror="this.src='https://via.placeholder.com/100x100?text=Sin+Imagen'">
+                    <div class="result-content">
+                        <div class="result-texto">${vehiculo.texto}</div>
+                        <div class="result-details">
+                            <strong>ID:</strong> ${vehiculo.vehicleID}<br>
+                            <strong>Marca:</strong> ${vehiculo.marca.nombre}<br>
+                            <strong>Modelo:</strong> ${vehiculo.modelo.nombre}<br>
+                            <strong>Versión:</strong> ${vehiculo.version.nombre}<br>
+                            <strong>Categoría:</strong> ${vehiculo.categoria.nombre}<br>
+                            <strong>Año:</strong> ${vehiculo.año}<br>
+                            <strong>Precio:</strong> $${vehiculo.precio || 'N/A'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+            
+            console.log('Vehículo seleccionado:', vehiculo);
+        }
+
+        async function autocompletar(query) {
+            if (!query || query.trim().length < 2) {
+                ocultarAutocomplete();
+                return;
+            }
+
+            try {
+                const url = `/api/vehicles/search?q=${encodeURIComponent(query)}&limit=10`;
+                console.log('Autocompletando:', url);
+                
+                const response = await fetch(url);
+                console.log('Autocomplete status:', response.status);
+                
+                const data = await response.json();
+                console.log('Autocomplete data:', data);
+                
+                // Acceder a data.data.data por la estructura de successResponse
+                const vehicles = data.data?.data || data.data || [];
+                console.log('Vehículos extraídos:', vehicles);
+
+                if (response.ok && vehicles && vehicles.length > 0) {
+                    console.log('Mostrando', vehicles.length, 'resultados en autocomplete');
+                    mostrarAutocomplete(vehicles);
+                } else {
+                    console.log('Sin resultados para autocompletado');
+                    ocultarAutocomplete();
+                }
+            } catch (error) {
+                console.error('Error en autocompletado:', error);
+                ocultarAutocomplete();
+            }
+        }
+
+        async function buscar() {
+            const query = document.getElementById('searchQuery').value;
+            const limit = document.getElementById('searchLimit').value;
+            const resultsDiv = document.getElementById('results');
+
+            if (!query || query.trim().length < 2) {
+                mostrarMensaje('❌ Ingresa al menos 2 caracteres', 'error');
+                return;
+            }
+
+            ocultarAutocomplete();
+            mostrarMensaje('⏳ Buscando...', 'loading');
+            resultsDiv.innerHTML = '';
+
+            try {
+                const url = `/api/vehicles/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+                console.log('URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    // Acceder a data.data.data por la estructura de successResponse
+                    const vehicles = data.data?.data || data.data || [];
+                    
+                    if (vehicles && vehicles.length > 0) {
+                        mostrarMensaje(`✅ Se encontraron ${vehicles.length} resultados`, 'success');
+                        
+                        let html = '<div class="results">';
+                        vehicles.forEach(v => {
+                            const imagenUrl = v.imagen || 'https://via.placeholder.com/100x100?text=Sin+Imagen';
+                            html += `
+                                <div class="result-item">
+                                    <img src="${imagenUrl}" alt="${v.texto}" onerror="this.src='https://via.placeholder.com/100x100?text=Sin+Imagen'">
+                                    <div class="result-content">
+                                        <div class="result-texto">${v.texto}</div>
+                                        <div class="result-details">
+                                            ID: ${v.vehicleID} | Precio: $${v.precio} | Año: ${v.año}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        resultsDiv.innerHTML = html;
+                    } else {
+                        mostrarMensaje('ℹ️ No se encontraron resultados', 'info');
+                    }
+                } else {
+                    mostrarMensaje(`❌ Error ${response.status}: ${data.error || 'Error desconocido'}`, 'error');
+                    console.error('Error response:', data);
+                }
+            } catch (error) {
+                mostrarMensaje(`❌ Error: ${error.message}`, 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Evento para autocompletado en tiempo real
+        document.getElementById('searchQuery').addEventListener('input', (e) => {
+            clearTimeout(autocompleteTimeout);
+            const query = e.target.value;
+            
+            if (query.trim().length >= 2) {
+                autocompleteTimeout = setTimeout(() => {
+                    autocompletar(query);
+                }, 300); // Esperar 300ms después de que el usuario deje de escribir
+            } else {
+                ocultarAutocomplete();
+            }
+        });
+
+        // Buscar al presionar Enter
+        document.getElementById('searchQuery').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                ocultarAutocomplete();
+                buscar();
+            }
+        });
+
+        // Cerrar autocomplete al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-container')) {
+                ocultarAutocomplete();
+            }
+        });
+    </script>
+</body>
+</html>
