@@ -43,6 +43,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             communityName: true,
             communityLocationLat: true,
             communityLocationLon: true,
+            communityImageURL: true,
             _count: {
               select: {
                 tblcommunityusers: true, // Total de miembros
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       const formattedCommunities = availableCommunities.map(community => ({
         communityID: community.communityID,
         nombre: community.communityName,
+        imagen: community.communityImageURL,
         ubicacion: {
           latitud: community.communityLocationLat,
           longitud: community.communityLocationLon,

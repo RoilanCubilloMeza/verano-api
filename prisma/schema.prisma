@@ -12,6 +12,7 @@ model tblcommunities {
   communityName        String                 @db.VarChar(255)
   communityLocationLat String?                @db.VarChar(20)
   communityLocationLon String?                @db.VarChar(20)
+  communityImageURL    String?                @db.VarChar(500)
   tblcommunitymessages tblcommunitymessages[]
   tblcommunityusers    tblcommunityusers[]
 }

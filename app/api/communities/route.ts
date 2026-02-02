@@ -4,6 +4,7 @@ import { handleError, successResponse } from '@/utils/api-response'
 import { withAuth } from '@/utils/middleware'
 import { createCommunitySchema } from '@/utils/validations'
 import { paginationSchema } from '@/utils/validations'
+import { uploadImage } from '@/utils/cloudinary'
 
 // GET /api/communities - Obtener todas las comunidades
 export async function GET(request: NextRequest) {
@@ -52,13 +53,33 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withAuth(request, async (req, authUserId) => {
     try {
-      const body = await request.json()
-      const validated = createCommunitySchema.parse(body)
+      const formData = await request.formData()
+      
+      // Extraer datos del formulario
+      const communityName = formData.get('communityName') as string
+      const communityLocationLat = formData.get('communityLocationLat') as string | null
+      const communityLocationLon = formData.get('communityLocationLon') as string | null
+      const imageFile = formData.get('image') as File | null
+
+      // Validar datos básicos
+      const validated = createCommunitySchema.parse({
+        communityName,
+        communityLocationLat,
+        communityLocationLon,
+      })
+
+      // Subir imagen a Cloudinary si existe
+      let imageURL: string | null = null
+      if (imageFile && imageFile.size > 0) {
+        const uploadResult = await uploadImage(imageFile, 'communities')
+        imageURL = uploadResult.url
+      }
 
       // Crear comunidad y agregar al creador como administrador
       const community = await prisma.tblcommunities.create({
         data: {
           ...validated,
+          communityImageURL: imageURL,
           tblcommunityusers: {
             create: {
               commUserUserId: authUserId,
