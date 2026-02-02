@@ -44,22 +44,28 @@ export async function POST(request: NextRequest) {
       })
 
       if (existingEmailUser) {
-        throw new ApiError(
-          409,
-          'Este correo ya está registrado con otro método. Por favor inicia sesión con tu contraseña.'
-        )
+        // Si el usuario ya existe con email/password, vincular Google OAuth
+        // Actualizar el userFirebaseUID para permitir login con ambos métodos
+        user = await prisma.tblusuarios.update({
+          where: { userId: existingEmailUser.userId },
+          data: {
+            userFirebaseUID: googleUserInfo.sub,
+            userName: googleUserInfo.name || existingEmailUser.userName,
+            userPhotoURL: googleUserInfo.picture || existingEmailUser.userPhotoURL,
+          },
+        })
+      } else {
+        // Crear nuevo usuario
+        user = await prisma.tblusuarios.create({
+          data: {
+            userFirebaseUID: googleUserInfo.sub,
+            userEmail: googleUserInfo.email,
+            userName: googleUserInfo.name || googleUserInfo.email.split('@')[0],
+            userPhotoURL: googleUserInfo.picture || null,
+            userAppVersion: 'P', // P = Premium o F = Free
+          },
+        })
       }
-
-      // Crear nuevo usuario
-      user = await prisma.tblusuarios.create({
-        data: {
-          userFirebaseUID: googleUserInfo.sub,
-          userEmail: googleUserInfo.email,
-          userName: googleUserInfo.name || googleUserInfo.email.split('@')[0],
-          userPhotoURL: googleUserInfo.picture || null,
-          userAppVersion: 'P', // P = Premium o F = Free
-        },
-      })
     } else {
       // Actualizar información del usuario si cambió
       user = await prisma.tblusuarios.update({
