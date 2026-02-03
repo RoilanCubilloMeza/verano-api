@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             },
           },
           orderBy: {
-            messageDate: 'desc',
+            messageDate: 'asc',
           },
         }),
         prisma.tblcommunitymessages.count({
