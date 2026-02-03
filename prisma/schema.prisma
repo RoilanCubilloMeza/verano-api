@@ -20,7 +20,7 @@ model tblcommunities {
 model tblcommunitymessages {
   messageID          Int            @id @default(autoincrement())
   messageContent     String         @db.VarChar(4000)
-  messageDate        DateTime       @db.Date
+  messageDate        DateTime       @db.DateTime
   messageCommunityID Int
   messageUserId      Int
   tblcommunities     tblcommunities @relation(fields: [messageCommunityID], references: [communityID], onUpdate: Restrict, map: "RelCommunityMessages")
