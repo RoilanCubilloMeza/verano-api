@@ -83,6 +83,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           take: limit,
           select: {
             vehicleID: true,
+            vehiclebrand: true,
             vehicleImageURL: true,
             vehicleYear: true,
             tblvehiclemodel: {
