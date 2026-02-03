@@ -84,25 +84,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           select: {
             vehicleID: true,
             vehicleImageURL: true,
-            vehicleYear: true,
             tblvehiclebrand: {
               select: {
-                brandDescription: true,
+                brandBrand: true,
               },
             },
             tblvehiclemodel: {
               select: {
                 modelDescription: true,
-              },
-            },
-            tblvehicleversion: {
-              select: {
-                versionDescription: true,
-              },
-            },
-            tblvehiclecategories: {
-              select: {
-                categoryDescription: true,
               },
             },
           },
@@ -119,11 +108,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       const formattedVehicles = vehicles.map(vehicle => ({
         vehicleID: vehicle.vehicleID,
         imagen: vehicle.vehicleImageURL,
-        marca: vehicle.tblvehiclebrand.brandDescription,
+        marca: vehicle.tblvehiclebrand.brandBrand,
         modelo: vehicle.tblvehiclemodel.modelDescription,
-        version: vehicle.tblvehicleversion.versionDescription,
-        año: vehicle.vehicleYear,
-        categoria: vehicle.tblvehiclecategories.categoryDescription,
       }))
 
       return successResponse({
