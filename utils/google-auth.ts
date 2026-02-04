@@ -1,95 +1,89 @@
-import { OAuth2Client } from 'google-auth-library'
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+import * as admin from 'firebase-admin'
 
 export interface GoogleUserInfo {
-  sub: string // Google User ID (será nuestro userFirebaseUID)
+  sub: string // Firebase UID
   email: string
   email_verified: boolean
   name?: string
   picture?: string
 }
 
-/**
- * Verifica el token de Google y devuelve la información del usuario
- */
-export async function verifyGoogleToken(token: string): Promise<GoogleUserInfo> {
+// Inicializar Firebase Admin solo una vez
+if (!admin.apps.length) {
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    })
-
-    const payload = ticket.getPayload()
-
-    if (!payload) {
-      throw new Error('Token payload vacío')
+    // Opción 1: Usando variable de entorno con JSON
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      })
     }
+    // Opción 2: Usando archivo JSON (para desarrollo)
+    else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+      admin.initializeApp({
+        credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_PATH),
+      })
+    }
+    // Opción 3: Variables individuales
+    else {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      })
+    }
+  } catch (error) {
+    console.error('Error inicializando Firebase Admin:', error)
+    throw new Error('Firebase Admin no está configurado correctamente')
+  }
+}
 
-    if (!payload.email_verified) {
-      throw new Error('Email no verificado por Google')
+/**
+ * Verifica el token de Firebase y devuelve la información del usuario
+ */
+export async function verifyFirebaseToken(token: string): Promise<GoogleUserInfo> {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token)
+
+    if (!decodedToken.email_verified) {
+      throw new Error('Email no verificado')
     }
 
     return {
-      sub: payload.sub,
-      email: payload.email!,
-      email_verified: payload.email_verified,
-      name: payload.name,
-      picture: payload.picture,
+      sub: decodedToken.uid,
+      email: decodedToken.email!,
+      email_verified: decodedToken.email_verified,
+      name: decodedToken.name,
+      picture: decodedToken.picture,
     }
   } catch (error) {
-    throw new Error('Token de Google inválido o expirado')
+    console.error('Error verificando token de Firebase:', error)
+    throw new Error('Token de Firebase inválido o expirado')
   }
 }
 
 /**
- * Genera URL de autenticación de Google
+ * Obtiene un usuario de Firebase por UID
  */
-export function getGoogleAuthUrl(redirectUri: string): string {
-  const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
-  
-  const options = {
-    redirect_uri: redirectUri,
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    access_type: 'offline',
-    response_type: 'code',
-    prompt: 'consent',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-    ].join(' '),
+export async function getFirebaseUser(uid: string) {
+  try {
+    return await admin.auth().getUser(uid)
+  } catch (error) {
+    console.error('Error obteniendo usuario de Firebase:', error)
+    throw new Error('Usuario no encontrado en Firebase')
   }
-
-  const qs = new URLSearchParams(options)
-
-  return `${rootUrl}?${qs.toString()}`
 }
 
 /**
- * Obtiene tokens de Google usando el código de autorización
+ * Crea un custom token de Firebase (útil para testing o admin)
  */
-export async function getGoogleTokens(code: string, redirectUri: string) {
-  const url = 'https://oauth2.googleapis.com/token'
-
-  const values = {
-    code,
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-    redirect_uri: redirectUri,
-    grant_type: 'authorization_code',
+export async function createCustomToken(uid: string) {
+  try {
+    return await admin.auth().createCustomToken(uid)
+  } catch (error) {
+    console.error('Error creando custom token:', error)
+    throw new Error('Error creando token personalizado')
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams(values),
-  })
-
-  if (!response.ok) {
-    throw new Error('Error al obtener tokens de Google')
-  }
-
-  return response.json()
 }

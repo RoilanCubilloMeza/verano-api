@@ -1,36 +1,25 @@
 import { NextRequest } from 'next/server'
-import { GoogleUserInfo, verifyGoogleToken } from '@/utils/google-auth'
+import { GoogleUserInfo, verifyFirebaseToken } from '@/utils/google-auth'
 import { prisma } from '@/utils/prisma'
 import { generateToken } from '@/utils/auth'
 import { handleError, successResponse, ApiError } from '@/utils/api-response'
 
 /**
- * POST /api/auth/google - Autenticación con Google
+ * POST /api/auth/google - Autenticación con Firebase (Google)
  * 
- * Recibe un token ID de Google, lo verifica y crea/actualiza el usuario
+ * Recibe un Firebase ID token, lo verifica y crea/actualiza el usuario
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { idToken, googleUser, accessToken } = body
+    const { idToken } = body
 
-    let googleUserInfo: GoogleUserInfo
-
-    if (idToken) {
-      // Método original: verificar ID token
-      googleUserInfo = await verifyGoogleToken(idToken)
-    } else if (googleUser && accessToken) {
-      // Método alternativo: usar datos directos de Google
-      googleUserInfo = {
-        sub: googleUser.id,
-        email: googleUser.email,
-        email_verified: googleUser.verified_email,
-        name: googleUser.name,
-        picture: googleUser.picture,
-      }
-    } else {
-      throw new ApiError(400, 'Token de Google o datos de usuario requeridos')
+    if (!idToken) {
+      throw new ApiError(400, 'Firebase ID token requerido')
     }
+
+    // Verificar token de Firebase
+    const googleUserInfo: GoogleUserInfo = await verifyFirebaseToken(idToken)
 
     // Buscar o crear usuario
     let user = await prisma.tblusuarios.findUnique({
