@@ -45,14 +45,14 @@ export function handleError(error: unknown, logs: string[] = []) {
   // Errores de Prisma
   if (error && typeof error === 'object' && 'code' in error) {
     const prismaError = error as { code: string; meta?: unknown }
-    
+
     if (prismaError.code === 'P2002') {
       return NextResponse.json(
         { error: 'Ya existe un registro con estos datos únicos', logs },
         { status: 409 }
       )
     }
-    
+
     if (prismaError.code === 'P2025') {
       return NextResponse.json(
         { error: 'Registro no encontrado', logs },
@@ -64,18 +64,18 @@ export function handleError(error: unknown, logs: string[] = []) {
   // Error genérico - agregar logs del error para debugging en Vercel
   const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
   const errorStack = error instanceof Error ? error.stack : undefined
-  
+
   // Log detallado en servidor (visible en Vercel logs)
   console.error('Unhandled error:', {
     message: errorMessage,
     stack: errorStack,
     error: error,
   })
-  
+
   return NextResponse.json(
     {
-      error: process.env.NODE_ENV === 'production' 
-        ? 'Error interno del servidor' 
+      error: process.env.NODE_ENV === 'production'
+        ? 'Error interno del servidor'
         : errorMessage,
       logs: [...logs, `Error: ${errorMessage}`],
     },
