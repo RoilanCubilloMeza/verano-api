@@ -21,6 +21,7 @@ const registerSchema = z.object({
  * - mfaSecret: hash de la contraseña (reutilizamos campo existente)
  * - userPhotoURL: URL de Cloudinary si se sube foto
  */
+
 export async function POST(request: NextRequest) {
   try {
     // Detectar si es FormData (con imagen) o JSON
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar datos
-    const { email: validEmail, password: validPassword, name: validName } = 
+    const { email: validEmail, password: validPassword, name: validName } =
       registerSchema.parse({ email, password, name })
 
     // Verificar si el email ya existe
