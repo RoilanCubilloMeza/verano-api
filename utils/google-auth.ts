@@ -9,7 +9,7 @@ export interface GoogleUserInfo {
 }
 
 // Función para inicializar Firebase Admin de forma lazy
-function initializeFirebaseAdmin() {
+export function initializeFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
       // Opción 1: Usando variable de entorno con JSON
