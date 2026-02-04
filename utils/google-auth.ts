@@ -8,36 +8,41 @@ export interface GoogleUserInfo {
   picture?: string
 }
 
-// Inicializar Firebase Admin solo una vez
-if (!admin.apps.length) {
-  try {
-    // Opción 1: Usando variable de entorno con JSON
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      })
+// Función para inicializar Firebase Admin de forma lazy
+function initializeFirebaseAdmin() {
+  if (!admin.apps.length) {
+    try {
+      // Opción 1: Usando variable de entorno con JSON
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        })
+      }
+      // Opción 2: Usando archivo JSON (para desarrollo)
+      else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+        admin.initializeApp({
+          credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_PATH),
+        })
+      }
+      // Opción 3: Variables individuales
+      else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          }),
+        })
+      } else {
+        throw new Error('Variables de Firebase no configuradas')
+      }
+    } catch (error) {
+      console.error('Error inicializando Firebase Admin:', error)
+      throw new Error('Firebase Admin no está configurado correctamente')
     }
-    // Opción 2: Usando archivo JSON (para desarrollo)
-    else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-      admin.initializeApp({
-        credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_PATH),
-      })
-    }
-    // Opción 3: Variables individuales
-    else {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
-      })
-    }
-  } catch (error) {
-    console.error('Error inicializando Firebase Admin:', error)
-    throw new Error('Firebase Admin no está configurado correctamente')
   }
+  return admin
 }
 
 /**
@@ -45,7 +50,8 @@ if (!admin.apps.length) {
  */
 export async function verifyFirebaseToken(token: string): Promise<GoogleUserInfo> {
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token)
+    const firebaseAdmin = initializeFirebaseAdmin()
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token)
 
     if (!decodedToken.email_verified) {
       throw new Error('Email no verificado')
@@ -69,7 +75,8 @@ export async function verifyFirebaseToken(token: string): Promise<GoogleUserInfo
  */
 export async function getFirebaseUser(uid: string) {
   try {
-    return await admin.auth().getUser(uid)
+    const firebaseAdmin = initializeFirebaseAdmin()
+    return await firebaseAdmin.auth().getUser(uid)
   } catch (error) {
     console.error('Error obteniendo usuario de Firebase:', error)
     throw new Error('Usuario no encontrado en Firebase')
@@ -81,7 +88,8 @@ export async function getFirebaseUser(uid: string) {
  */
 export async function createCustomToken(uid: string) {
   try {
-    return await admin.auth().createCustomToken(uid)
+    const firebaseAdmin = initializeFirebaseAdmin()
+    return await firebaseAdmin.auth().createCustomToken(uid)
   } catch (error) {
     console.error('Error creando custom token:', error)
     throw new Error('Error creando token personalizado')
