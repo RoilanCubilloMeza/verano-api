@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
         orderBy: {
           brandBrand: 'asc',
         },
+        distinct: ['brandBrand'],
       });
 
       return successResponse(brands);
