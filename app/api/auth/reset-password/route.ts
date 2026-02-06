@@ -15,10 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const { email, code, newPassword } = await request.json()
 
-    console.log(' Reset Password Request:')
-    console.log('  - Email:', email)
-    console.log('  - Code:', code)
-    console.log('  - Normalized email:', email.toLowerCase())
+    
 
     // Validaciones
     if (!email || !code || !newPassword) {
@@ -29,15 +26,10 @@ export async function POST(request: NextRequest) {
       throw new ApiError(400, 'La contraseña debe tener al menos 6 caracteres')
     }
 
-    // Verificar código
-    console.log(' Verificando código...')
-    console.log(' Emails en resetCodes:', Array.from(resetCodes.keys()))
-    
+
+
     const storedData = resetCodes.get(email.toLowerCase())
-    
-    console.log(' Código guardado:', storedData?.code)
-    console.log(' Código recibido:', code)
-    console.log(' Coinciden?:', storedData?.code === code)
+
 
     if (!storedData) {
       console.error(' No se encontró código para:', email.toLowerCase())
@@ -82,7 +74,6 @@ export async function POST(request: NextRequest) {
 
     // Eliminar código usado
     resetCodes.delete(email.toLowerCase())
-    console.log(' Contraseña actualizada exitosamente para:', email.toLowerCase())
 
     return successResponse({
       message: 'Contraseña actualizada exitosamente',

@@ -34,6 +34,13 @@ export const createOpinionSchema = z.object({
   opinionUserId: z.number().int().positive('ID de usuario inválido'),
 })
 
+export const updateOpinionSchema = z.object({
+  opinionRate: z.number().int().min(1).max(5, 'Calificación debe estar entre 1 y 5').optional(),
+  opinionComment: z.string().max(255, 'Comentario muy largo').optional(),
+}).refine(data => data.opinionRate !== undefined || data.opinionComment !== undefined, {
+  message: 'Debe proporcionar al menos un campo para actualizar',
+})
+
 // Esquemas para comunidades
 export const createCommunitySchema = z.object({
   communityName: z.string().min(3, 'Nombre debe tener al menos 3 caracteres').max(255),
@@ -94,6 +101,7 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>
 export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>
 export type CreateOpinionInput = z.infer<typeof createOpinionSchema>
+export type UpdateOpinionInput = z.infer<typeof updateOpinionSchema>
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>
 export type CreateCommunityMessageInput = z.infer<typeof createCommunityMessageSchema>
 export type CreateUserPreferenceInput = z.infer<typeof createUserPreferenceSchema>
